@@ -10,12 +10,12 @@ plugins {
 
 android {
   namespace = "com.example"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.aistudio.jumphub.trvkmq"
     minSdk = 26
-    targetSdk = 36
+    targetSdk = 35
     versionCode = 2
     versionName = "1.0.1"
 

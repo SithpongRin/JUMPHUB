@@ -96,22 +96,19 @@ object InAppUpdateManager {
     fun startDownloadAndInstall(context: Context, downloadUrl: String, versionName: String) {
         try {
             val fileName = "JUMPHUB-$versionName.apk"
-            val destinationFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
-            if (destinationFile.exists()) {
-                destinationFile.delete()
-            }
 
             val request = DownloadManager.Request(Uri.parse(downloadUrl)).apply {
                 setTitle("JUMPHUB Update $versionName")
                 setDescription("Downloading latest update...")
+                setMimeType("application/vnd.android.package-archive")
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setDestinationUri(Uri.fromFile(destinationFile))
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
             }
 
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = downloadManager.enqueue(request)
 
-            Toast.makeText(context, "Downloading update...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "កំពុងទាញយកកំណែថ្មី...", Toast.LENGTH_SHORT).show()
 
             // Register broadcast receiver for download completion
             val onCompleteReceiver = object : BroadcastReceiver() {
@@ -121,7 +118,12 @@ object InAppUpdateManager {
                         try {
                             recvContext.unregisterReceiver(this)
                         } catch (_: Exception) {}
-                        installApk(recvContext, destinationFile)
+
+                        val downloadedFile = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            fileName
+                        )
+                        installApk(recvContext, downloadedFile)
                     }
                 }
             }

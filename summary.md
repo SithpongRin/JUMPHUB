@@ -96,8 +96,10 @@ Configurable through DataStore with independent Voice Language and UI Language:
 - **Engine**: Implemented via `com.example.service.update.InAppUpdateManager`.
 - **Check Workflow**: Communicates directly with GitHub Releases API (`https://api.github.com/repos/SithpongRin/JUMPHUB/releases/latest`) to detect semantic version upgrades against `BuildConfig.VERSION_NAME`.
 - **Download & Install**:
-  - Downloads APK directly in background via Android `DownloadManager` with notification visibility.
-  - Triggers native Android PackageInstaller prompt on download completion via `androidx.core.content.FileProvider` (`res/xml/file_paths.xml`) and `android.permission.REQUEST_INSTALL_PACKAGES`.
+  - Downloads APK directly in background via Android `DownloadManager` with notification visibility into public `DownloadManager` external directory (`Environment.DIRECTORY_DOWNLOADS`) with MIME type `application/vnd.android.package-archive`.
+  - Configured `file_paths.xml` with `<external-path>` and `<external-files-path>` for `androidx.core.content.FileProvider`.
+  - Resolved "There was a problem parsing the package" error by setting `targetSdk = 35` (stable Android 15 standard, minSdk 26) while keeping `compileSdk = 36` for modern Jetpack libraries, and directing APK downloads to public Downloads storage so Android PackageInstaller has direct file read permissions.
+  - Triggers native Android PackageInstaller prompt on download completion via `FileProvider` and `android.permission.REQUEST_INSTALL_PACKAGES`.
   - User can update with a single tap inside **Settings $\to$ About & Updates (Check for Updates)** without uninstalling or losing local workout history.
 
 ---
@@ -115,11 +117,11 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 
 ## 11. Verification & Build Status
 - **Java Runtime**: OpenJDK 21 (Android Studio JBR 21)
-- **Android Target**: compileSdk / targetSdk 36, minSdk 26
+- **Android Target**: compileSdk 36, targetSdk 35, minSdk 26
 - **Unit Test Execution**: `:app:testDebugUnitTest` executed and passed 100% (33 tasks, 0 failures).
 - **Assemble Build**: `:app:assembleDebug` built cleanly with zero compilation errors, generating debug APK (`build/outputs/apk/debug/app-debug.apk`).
 - **Signing & Assets**: Debug keystore present at project root, Room schema v1 preserved without destructive migrations.
-- **GitHub Release**: Tag `v1.0.0` published with `JUMPHUB-v1.0.apk` containing in-app updater capability.
+- **GitHub Release**: Tag `v1.0.1` published with `JUMPHUB-v1.0.1.apk` containing in-app updater capability and parse package fix.
 
 ---
 
