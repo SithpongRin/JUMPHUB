@@ -101,8 +101,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             isWeightDue = isWeightDue,
             syncReport = syncReport
         )
-    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
-    .stateIn(
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState()

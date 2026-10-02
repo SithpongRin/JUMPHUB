@@ -79,10 +79,14 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         if (!hasCheckedUpdateThisSession) {
             hasCheckedUpdateThisSession = true
-            val info = com.example.service.update.InAppUpdateManager.checkForUpdate()
-            if (info.hasUpdate) {
-                autoUpdateInfo = info
-                showAutoUpdateDialog = true
+            try {
+                val info = com.example.service.update.InAppUpdateManager.checkForUpdate()
+                if (info.hasUpdate) {
+                    autoUpdateInfo = info
+                    showAutoUpdateDialog = true
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("HomeScreen", "Auto update check failed safely: ${e.message}")
             }
         }
     }

@@ -61,7 +61,7 @@ object InAppUpdateManager {
                         val asset = assets.getJSONObject(i)
                         val name = asset.optString("name", "")
                         if (name.endsWith(".apk", ignoreCase = true)) {
-                            apkUrl = asset.optString("browser_download_url", null)
+                            apkUrl = if (asset.has("browser_download_url")) asset.getString("browser_download_url") else null
                             break
                         }
                     }
