@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JUMPHUB</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">ទំព័រដើម</string>
+    <string name="nav_plans">គម្រោង</string>
+    <string name="nav_progress">វឌ្ឍនភាព</string>
+    <string name="nav_records">កំណត់ត្រា</string>
+    <string name="nav_settings">ការកំណត់</string>
+
+    <!-- Actions -->
+    <string name="action_start">ចាប់ផ្តើម</string>
+    <string name="action_start_workout">ចាប់ផ្តើមហាត់</string>
+    <string name="action_pause">ផ្អាក</string>
+    <string name="action_resume">បន្ត</string>
+    <string name="action_stop">បញ្ចប់</string>
+    <string name="action_save">រក្សាទុក</string>
+    <string name="action_cancel">បោះបង់</string>
+    <string name="action_continue">បន្តទៅមុខ</string>
+    <string name="action_skip">រំលង</string>
+    <string name="action_sync_now">ធ្វើសមកាលកម្មឥឡូវ</string>
+    <string name="action_log_in">ចូលគណនី</string>
+    <string name="action_log_out">ចាកចេញ</string>
+    <string name="action_sign_in_google">ចូលតាម Google</string>
+    <string name="action_guest_mode">បន្តជាភ្ញៀវ</string>
+    <string name="action_check_updates">ពិនិត្យមើលកំណែថ្មី</string>
+    <string name="action_update_now">អាប់ដេតឥឡូវ</string>
+    <string name="action_later">ពេលក្រោយ</string>
+    <string name="action_calibrate">ក្រិតឧបករណ៍ចាប់សញ្ញា</string>
+    <string name="action_rebuild_stats">គណនាស្ថិតិឡើងវិញ</string>
+    <string name="action_export_json">នាំចេញទិន្នន័យ (JSON)</string>
+    <string name="action_import_json">នាំចូលទិន្នន័យ (JSON)</string>
+    <string name="action_reset_data">កំណត់ទិន្នន័យឡើងវិញ</string>
+
+    <!-- Home -->
+    <string name="home_title">JUMPHUB</string>
+    <string name="home_subtitle">ការហ្វឹកហាត់លោតខ្សែយ៉ាងជាក់លាក់</string>
+    <string name="home_today_session">វគ្គហ្វឹកហាត់ថ្ងៃនេះ</string>
+    <string name="home_weekly_progress">វឌ្ឍនភាពប្រចាំសប្តាហ៍</string>
+    <string name="home_weekly_goal">គោលដៅប្រចាំសប្តាហ៍</string>
+    <string name="home_current_streak">ការបន្តជាប់លាប់</string>
+    <string name="home_streak_days">%1$d ថ្ងៃ</string>
+    <string name="home_total_jumps">ចំនួនលោតសរុប</string>
+    <string name="home_active_minutes">%1$d / %2$d នាទី</string>
+    <string name="home_active_time">រយៈពេលសកម្ម</string>
+    <string name="home_start_hint">ត្រៀមរួចរាល់ហើយឬនៅ? ចុចចាប់ផ្តើមដើម្បីហាត់ដោយមិនចាំបាច់កាន់ទូរស័ព្ទ។</string>
+    <string name="home_weight_due_title">ដល់ពេលថ្លឹងទម្ងន់ប្រចាំសប្តាហ៍</string>
+    <string name="home_weight_due_desc">សូមកត់ត្រាទម្ងន់ដើម្បីគណនាកាឡូរីឱ្យកាន់តែត្រឹមត្រូវ។</string>
+    <string name="home_sync_up_to_date">បានធ្វើសមកាលកម្មរួច</string>
+    <string name="home_sync_offline">មុខងារគ្មានអ៊ីនធឺណិត (រក្សាទុកក្នុងម៉ាស៊ីន)</string>
+    <string name="home_sync_pending">រង់ចាំសមកាលកម្ម (%1$d)</string>
+
+    <!-- Plans -->
+    <string name="plans_title">គម្រោងហ្វឹកហាត់</string>
+    <string name="plans_subtitle">កម្មវិធីលោតខ្សែតាមលំដាប់លំដោយ</string>
+    <string name="plan_health_title">សុខភាព និងគ្រឹះមូលដ្ឋាន</string>
+    <string name="plan_health_desc">កម្មវិធីរយៈពេល ៨ សប្តាហ៍ដើម្បីពង្រឹងបេះដូងនិងសុខភាពទូទៅដោយសុវត្ថិភាព។</string>
+    <string name="plan_endurance_title">ពង្រឹងការស៊ូទ្រាំ</string>
+    <string name="plan_endurance_desc">កម្មវិធីពង្រីកសមត្ថភាពខ្យល់ដង្ហើម ឈានដល់ការលោតជាប់ៗគ្នា ២០ នាទី។</string>
+    <string name="plan_fat_loss_title">សម្រកខ្លាញ់ និងចន្លោះសម្រាក</string>
+    <string name="plan_fat_loss_desc">ការលោតចន្លោះកម្រិតខ្ពស់ដើម្បីបង្កើនការដុតរំលាយថាមពល។</string>
+    <string name="plan_free_jump_title">លោតដោយសេរី</string>
+    <string name="plan_free_jump_desc">វគ្គហាត់សេរីជាមួយការចាប់ចំនួនលោតនិងចង្វាក់ដោយស្វ័យប្រវត្តិ។</string>
+    <string name="plan_quick_title">លោតរហ័ស (១០ នាទី)</string>
+    <string name="plan_quick_desc">៥ ជុំ (លោត ៦០ វិ / សម្រាក ៣០ វិ) សម្រាប់ថ្ងៃរវល់។</string>
+    <string name="plan_active_badge">គម្រោងកំពុងអនុវត្ត</string>
+    <string name="plan_select">ជ្រើសរើសគម្រោង</string>
+    <string name="plan_progress">សម្រេចបាន %1$d%%</string>
+    <string name="plan_weeks">%1$d សប្តាហ៍</string>
+
+    <!-- Progress -->
+    <string name="progress_title">វឌ្ឍនភាព</string>
+    <string name="progress_subtitle">ស្ថិតិ និន្នាការ និងកំណត់ត្រាហ្វឹកហាត់</string>
+    <string name="progress_tab_7days">៧ ថ្ងៃ</string>
+    <string name="progress_tab_3months">៣ ខែ</string>
+    <string name="progress_tab_year">១ ឆ្នាំ</string>
+    <string name="progress_total_sessions">វគ្គដែលបានបញ្ចប់</string>
+    <string name="progress_jpm_avg">ល្បឿនមធ្យម</string>
+    <string name="progress_calories_est">កាឡូរីប៉ាន់ស្មាន</string>
+    <string name="progress_empty_title">មិនទាន់មានទិន្នន័យហាត់ទេ</string>
+    <string name="progress_empty_desc">ចាប់ផ្តើមវគ្គហាត់ដំបូងរបស់អ្នកដើម្បីមើលស្ថិតិនៅទីនេះ។</string>
+
+    <!-- Records -->
+    <string name="records_title">កំណត់ត្រាផ្ទាល់ខ្លួន</string>
+    <string name="records_subtitle">ស្នាដៃលោតខ្សែដ៏ឆ្នើមរបស់អ្នក</string>
+    <string name="record_longest_streak">លោតជាប់បានយូរបំផុត</string>
+    <string name="record_30s">លោតបានច្រើនបំផុត (៣០ វិ)</string>
+    <string name="record_60s">លោតបានច្រើនបំផុត (១ នាទី)</string>
+    <string name="record_2m">លោតបានច្រើនបំផុត (២ នាទី)</string>
+    <string name="record_5m">លោតបានច្រើនបំផុត (៥ នាទី)</string>
+    <string name="record_session">លោតបានច្រើនបំផុតក្នុងមួយវគ្គ</string>
+    <string name="record_peak_rate">ល្បឿនលឿនបំផុត</string>
+    <string name="record_none">មិនទាន់មានកំណត់ត្រា</string>
+
+    <!-- Settings -->
+    <string name="settings_title">ការកំណត់</string>
+    <string name="settings_section_account">គណនី និងសមកាលកម្ម</string>
+    <string name="settings_section_audio">សំឡេងណែនាំ</string>
+    <string name="settings_section_detection">ឧបករណ៍ចាប់សញ្ញា និងការក្រិត</string>
+    <string name="settings_section_appearance">រូបរាង និងភាសា</string>
+    <string name="settings_section_training">គោលដៅហ្វឹកហាត់</string>
+    <string name="settings_section_data">ទិន្នន័យ និងបម្រុងទុក</string>
+    <string name="settings_section_about">អំពីកម្មវិធី</string>
+    <string name="settings_section_reset">កំណត់ឡើងវិញ</string>
+
+    <string name="settings_ui_language">ភាសាកម្មវិធី</string>
+    <string name="settings_voice_language">ភាសាសំឡេងណែនាំ</string>
+    <string name="settings_voice_enabled">បើកសំឡេងណែនាំ</string>
+    <string name="settings_voice_volume">កម្រិតសំឡេង</string>
+    <string name="settings_announcement_interval">ចន្លោះពេលប្រាប់ចំនួន</string>
+    <string name="settings_rhythm_beep">សំឡេងប៊ីបតាមចង្វាក់</string>
+    <string name="settings_vibration">រំញ័រ</string>
+
+    <string name="settings_phone_position">ទីតាំងទុកទូរស័ព្ទ</string>
+    <string name="settings_position_pocket">ហោប៉ៅ / ចង្កេះ (ណែនាំ)</string>
+    <string name="settings_position_hand">នៅក្នុងដៃ</string>
+    <string name="settings_sensitivity">កម្រិតចាប់សញ្ញា</string>
+    <string name="settings_sensitivity_low">ទាប</string>
+    <string name="settings_sensitivity_medium">មធ្យម (ស្តង់ដារ)</string>
+    <string name="settings_sensitivity_high">ខ្ពស់</string>
+
+    <string name="settings_theme">រូបរាងកម្មវិធី</string>
+    <string name="settings_theme_system">តាមប្រព័ន្ធទូរស័ព្ទ</string>
+    <string name="settings_theme_dark">ងងឹត (Dark)</string>
+    <string name="settings_theme_light">ភ្លឺ (Light)</string>
+
+    <string name="settings_weekly_goal">គោលដៅប្រចាំសប្តាហ៍ (នាទី)</string>
+    <string name="settings_met_value">កត្តាកម្លាំង MET</string>
+    <string name="settings_streak_tolerance">ចន្លោះអនុញ្ញាតសម្រាប់ Streak</string>
+
+    <string name="settings_app_version">កំណែកម្មវិធី</string>
+    <string name="settings_sync_status">ស្ថានភាពសមកាលកម្ម</string>
+    <string name="settings_last_sync">សមកាលកម្មចុងក្រោយ៖ %1$s</string>
+    <string name="settings_never_synced">មិនធ្លាប់សមកាលកម្ម</string>
+
+    <!-- Onboarding / Safety -->
+    <string name="onboarding_title">សូមស្វាគមន៍មកកាន់ JUMPHUB</string>
+    <string name="onboarding_subtitle">កម្រងសំណួរសុវត្ថិភាពសុខភាព (PAR-Q)</string>
+    <string name="onboarding_parq_intro">សូមឆ្លើយតាមការពិតដើម្បីធានាសុវត្ថិភាពរបស់អ្នកអំឡុងពេលហាត់លោតខ្សែ៖</string>
+    <string name="onboarding_q1">តើគ្រូពេទ្យធ្លាប់ប្រាប់ថាអ្នកមានជំងឺបេះដូងដែរឬទេ?</string>
+    <string name="onboarding_q2">តើអ្នកមានអារម្មណ៍ឈឺទ្រូងនៅពេលបញ្ចេញកម្លាំងហាត់ប្រាណដែរឬទេ?</string>
+    <string name="onboarding_q3">តើអ្នកធ្លាប់វិលមុខបាត់បង់លំនឹង ឬធ្លាប់សន្លប់ដែរឬទេ?</string>
+    <string name="onboarding_q4">តើអ្នកមានបញ្ហាឆ្អឹង ឬសន្លាក់ដែលអាចកាន់តែធ្ងន់ធ្ងរដោយសារការលោតដែរឬទេ?</string>
+    <string name="onboarding_warning_title">គួរពិគ្រោះជាមួយគ្រូពេទ្យជាមុន</string>
+    <string name="onboarding_warning_body">ដោយសារអ្នកបានឆ្លើយថា បាទ/ចាស ចំពោះសំណួរខាងលើ យើងសូមណែនាំឱ្យពិគ្រោះជាមួយវេជ្ជបណ្ឌិតមុននឹងចាប់ផ្តើមការហាត់ប្រាណលោតខ្សែខ្លាំងក្លា។</string>
+    <string name="onboarding_disclaimer">JUMPHUB មិនមែនជាដំបូន្មានវេជ្ជសាស្ត្រឡើយ។ សូមលោតលើផ្ទៃទន់សមរម្យ និងពាក់ស្បែកជើងកីឡាជំនួយជើង។</string>
+    <string name="onboarding_acknowledge">ខ្ញុំយល់ព្រម និងទទួលស្គាល់</string>
+    <string name="onboarding_get_started">ចាប់ផ្តើមប្រើប្រាស់</string>
+
+    <!-- Units -->
+    <string name="unit_jumps">ដង</string>
+    <string name="unit_jpm">ដង/នាទី</string>
+    <string name="unit_rpm">RPM</string>
+    <string name="unit_sec">វិ</string>
+    <string name="unit_min">នាទី</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_kg">គីឡូក្រាម</string>
+
+    <!-- Account -->
+    <string name="account_title">គណនី</string>
+    <string name="account_guest_title">គណនីភ្ញៀវ</string>
+    <string name="account_guest_desc">ទិន្នន័យត្រូវបានរក្សាទុកដោយសុវត្ថិភាពលើទូរស័ព្ទនេះ។ ចូលគណនីដើម្បីបម្រុងទុកនិងស្តារទិន្នន័យឆ្លងឧបករណ៍។</string>
+    <string name="account_signed_in_title">គណនីក្លោដ</string>
+    <string name="account_signed_in_desc">បានចូលជា %1$s។ សមកាលកម្មសកម្ម។</string>
+
+    <!-- Language options -->
+    <string name="lang_en">English</string>
+    <string name="lang_km">ភាសាខ្មែរ (Khmer)</string>
+</resources>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Jump rope arc swoosh (Lime green) -->
+    <path
+        android:pathData="M 30,50 C 26,76 82,76 78,50"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Left Handle -->
+    <path
+        android:pathData="M 28,43 L 32,53"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- Right Handle -->
+    <path
+        android:pathData="M 80,43 L 76,53"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- Jumping Athlete Silhouette (White & Lime accents) -->
+    <!-- Head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 54,34 A 4.5,4.5 0 1,0 54,25 A 4.5,4.5 0 1,0 54,34 Z" />
+
+    <!-- Torso and arms poised jumping -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 50,36 L 58,36 L 57,48 L 51,48 Z" />
+
+    <!-- Left Arm angled toward rope handle -->
+    <path
+        android:pathData="M 50,37 L 42,42 L 34,46"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Right Arm angled toward rope handle -->
+    <path
+        android:pathData="M 58,37 L 66,42 L 74,46"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Legs in mid-air tucked jump -->
+    <path
+        android:pathData="M 52,48 L 47,56 L 49,63"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M 56,48 L 61,56 L 59,63"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Speed/ground lift-off particles -->
+    <path
+        android:pathData="M 46,70 L 62,70"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+</vector>

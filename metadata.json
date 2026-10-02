@@ -1,0 +1,6 @@
+{
+  "name": "JUMPHUB",
+  "description": "Personal jump-rope workout application with offline tracking, dynamic floating navigation, and cloud sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
