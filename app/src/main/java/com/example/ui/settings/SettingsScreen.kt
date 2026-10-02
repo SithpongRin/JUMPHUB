@@ -96,18 +96,6 @@ fun SettingsScreen(
     var weightInput by remember(preferences.userWeightKg) { mutableStateOf(preferences.userWeightKg?.let { String.format("%.1f", it) } ?: "") }
     var profileSavedSuccess by remember { mutableStateOf(false) }
 
-    val isScrollingUp by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 ||
-                    listState.isScrollInProgress.not() ||
-                    listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-
-    LaunchedEffect(isScrollingUp) {
-        onNavVisibilityChanged(isScrollingUp)
-    }
-
     LazyColumn(
         state = listState,
         modifier = modifier

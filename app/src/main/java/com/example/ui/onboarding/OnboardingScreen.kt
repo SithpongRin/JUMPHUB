@@ -50,6 +50,7 @@ import com.example.R
 @Composable
 fun OnboardingScreen(
     onCompleteOnboarding: (age: Int, heightCm: Float, weightKg: Float?) -> Unit,
+    onSignInWithGoogle: (email: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit = { _, a, h, w -> onCompleteOnboarding(a, h, w) },
     modifier: Modifier = Modifier
 ) {
     var q1Heart by remember { mutableStateOf(false) }
@@ -61,6 +62,21 @@ fun OnboardingScreen(
     var ageInput by remember { mutableStateOf("28") }
     var heightInput by remember { mutableStateOf("175") }
     var weightInput by remember { mutableStateOf("70") }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val googleAccountPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val accountName = result.data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
+        val age = ageInput.toIntOrNull() ?: 28
+        val height = heightInput.toFloatOrNull() ?: 175f
+        val weight = weightInput.toFloatOrNull()
+        if (!accountName.isNullOrBlank()) {
+            onSignInWithGoogle(accountName, age, height, weight)
+        } else {
+            onCompleteOnboarding(age, height, weight)
+        }
+    }
 
     val hasRiskCondition = q1Heart || q2ChestPain || q3Dizziness || q4Joints
     val scrollState = rememberScrollState()
@@ -303,10 +319,23 @@ fun OnboardingScreen(
         // Sign In with Google Option
         OutlinedButton(
             onClick = {
-                val age = ageInput.toIntOrNull() ?: 28
-                val height = heightInput.toFloatOrNull() ?: 175f
-                val weight = weightInput.toFloatOrNull()
-                onCompleteOnboarding(age, height, weight)
+                try {
+                    val intent = android.accounts.AccountManager.newChooseAccountIntent(
+                        null,
+                        null,
+                        arrayOf("com.google"),
+                        null,
+                        null,
+                        null,
+                        null
+                    )
+                    googleAccountPicker.launch(intent)
+                } catch (e: Exception) {
+                    val age = ageInput.toIntOrNull() ?: 28
+                    val height = heightInput.toFloatOrNull() ?: 175f
+                    val weight = weightInput.toFloatOrNull()
+                    onCompleteOnboarding(age, height, weight)
+                }
             },
             enabled = disclaimerAccepted,
             modifier = Modifier
@@ -322,7 +351,7 @@ fun OnboardingScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = stringResource(R.string.action_sign_in_google) + " / Guest",
+                text = stringResource(R.string.action_sign_in_google),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
             )
         }

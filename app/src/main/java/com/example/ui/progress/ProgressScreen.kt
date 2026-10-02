@@ -62,23 +62,11 @@ fun ProgressScreen(
     sessions: List<WorkoutSession>,
     dailyStats: List<DailyStatEntity>,
     onOpenSession: (String) -> Unit,
-    onNavVisibilityChanged: (Boolean) -> Unit,
+    onNavVisibilityChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
-
-    val isScrollingUp by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 ||
-                    listState.isScrollInProgress.not() ||
-                    listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-
-    LaunchedEffect(isScrollingUp) {
-        onNavVisibilityChanged(isScrollingUp)
-    }
 
     LazyColumn(
         state = listState,

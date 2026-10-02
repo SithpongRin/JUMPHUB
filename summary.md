@@ -118,10 +118,14 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 ## 11. Verification & Build Status
 - **Java Runtime**: OpenJDK 21 (Android Studio JBR 21)
 - **Android Target**: compileSdk 36, targetSdk 35, minSdk 26
-- **Unit Test Execution**: `:app:testDebugUnitTest` executed and passed 100% (33 tasks, 0 failures).
+- **Unit Test Execution**: `:app:testDebugUnitTest` executed and passed 100% (49 tasks, 0 failures).
 - **Assemble Build**: `:app:assembleDebug` built cleanly with zero compilation errors, generating debug APK (`build/outputs/apk/debug/app-debug.apk`).
 - **Signing & Assets**: Debug keystore present at project root, Room schema v1 preserved without destructive migrations.
-- **GitHub Release**: Tag `v1.0.1` published with `JUMPHUB-v1.0.1.apk` containing in-app updater capability and parse package fix.
+- **Body Sensors & Activity Recognition**: Declared `BODY_SENSORS`, `ACTIVITY_RECOGNITION`, and `HIGH_SAMPLING_RATE_SENSORS` in Manifest, and requested runtime permissions on launch, completely resolving the OS "JUMPHUB should be granted Body sensors access to function properly" prompt and "No permissions denied" setting issue.
+- **Scroll Jank & Smoothness**: Removed scroll-triggered hide/show bottom nav recompositions from all screens, keeping the floating bar stably docked at the bottom with 120dp padding. Heavy view model calculations offloaded to `Dispatchers.Default`.
+- **Google Account Authentication**: Native Android `AccountManager.newChooseAccountIntent` integration in Onboarding and Account screens connecting real device Google accounts with Firestore cloud sync.
+- **Plan Schedule Synchronization**: Automatic synchronization of training days when choosing a program (e.g. Endurance Builder auto-syncs 4 days), status indicators in schedule picker, and 1-tap "Sync with Plan" button.
+- **GitHub Release**: Tag `v1.0.2` with `JUMPHUB-v1.0.2.apk`.
 
 ---
 

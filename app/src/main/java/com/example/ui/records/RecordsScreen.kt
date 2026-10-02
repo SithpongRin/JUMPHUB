@@ -60,22 +60,10 @@ data class RecordCardItem(
 @Composable
 fun RecordsScreen(
     records: List<PersonalRecord>,
-    onNavVisibilityChanged: (Boolean) -> Unit,
+    onNavVisibilityChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-
-    val isScrollingUp by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 ||
-                    listState.isScrollInProgress.not() ||
-                    listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-
-    LaunchedEffect(isScrollingUp) {
-        onNavVisibilityChanged(isScrollingUp)
-    }
 
     val recordTypes = listOf(
         RecordCardItem(RecordType.LONGEST_STREAK, R.string.record_longest_streak, Icons.Default.LocalFireDepartment, "jumps"),

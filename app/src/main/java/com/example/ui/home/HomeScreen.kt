@@ -58,6 +58,8 @@ import com.example.R
 import com.example.data.sync.SyncState
 import com.example.domain.model.UserActivePlan
 
+private var hasCheckedUpdateThisSession = false
+
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
@@ -65,7 +67,7 @@ fun HomeScreen(
     onOpenPlan: (String) -> Unit,
     onOpenWeight: () -> Unit,
     onSyncNow: () -> Unit,
-    onNavVisibilityChanged: (Boolean) -> Unit,
+    onNavVisibilityChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -73,26 +75,16 @@ fun HomeScreen(
     var autoUpdateInfo by remember { androidx.compose.runtime.mutableStateOf<com.example.service.update.AppUpdateInfo?>(null) }
     var showAutoUpdateDialog by remember { androidx.compose.runtime.mutableStateOf(false) }
 
-    // Auto-check for updates when Home opens
+    // Auto-check for updates once when Home first opens
     LaunchedEffect(Unit) {
-        val info = com.example.service.update.InAppUpdateManager.checkForUpdate()
-        if (info.hasUpdate) {
-            autoUpdateInfo = info
-            showAutoUpdateDialog = true
+        if (!hasCheckedUpdateThisSession) {
+            hasCheckedUpdateThisSession = true
+            val info = com.example.service.update.InAppUpdateManager.checkForUpdate()
+            if (info.hasUpdate) {
+                autoUpdateInfo = info
+                showAutoUpdateDialog = true
+            }
         }
-    }
-
-    // Dynamic floating nav response to scroll
-    val isScrollingUp by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 ||
-                    listState.isScrollInProgress.not() ||
-                    listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-
-    LaunchedEffect(isScrollingUp) {
-        onNavVisibilityChanged(isScrollingUp)
     }
 
     LazyColumn(

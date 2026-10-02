@@ -67,22 +67,11 @@ fun PlansScreen(
     trainingAdherencePct: Int,
     onSelectPlan: (TrainingPlan) -> Unit,
     onToggleTrainingDay: (Int) -> Unit,
-    onNavVisibilityChanged: (Boolean) -> Unit,
+    onSyncScheduleWithPlan: (Int) -> Unit = {},
+    onNavVisibilityChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-
-    val isScrollingUp by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 ||
-                    listState.isScrollInProgress.not() ||
-                    listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-
-    LaunchedEffect(isScrollingUp) {
-        onNavVisibilityChanged(isScrollingUp)
-    }
 
     LazyColumn(
         state = listState,
@@ -128,7 +117,10 @@ fun PlansScreen(
         item {
             TrainingDaysPickerCard(
                 selectedDays = selectedTrainingDays,
-                onToggleDay = onToggleTrainingDay
+                activePlan = activePlan,
+                plans = plans,
+                onToggleDay = onToggleTrainingDay,
+                onSyncWithPlan = onSyncScheduleWithPlan
             )
         }
 
@@ -148,7 +140,9 @@ fun PlansScreen(
             PlanItemCard(
                 plan = plan,
                 isActive = isActive,
-                onSelectPlan = { onSelectPlan(plan) }
+                selectedDaysCount = selectedTrainingDays.size,
+                onSelectPlan = { onSelectPlan(plan) },
+                onSyncSchedule = { onSyncScheduleWithPlan(plan.daysPerWeek) }
             )
         }
     }
@@ -268,8 +262,13 @@ private fun WhoGuidanceCard() {
 @Composable
 private fun TrainingDaysPickerCard(
     selectedDays: Set<Int>,
-    onToggleDay: (Int) -> Unit
+    activePlan: UserActivePlan?,
+    plans: List<TrainingPlan>,
+    onToggleDay: (Int) -> Unit,
+    onSyncWithPlan: (Int) -> Unit
 ) {
+    val activePlanDef = plans.find { it.id == activePlan?.planId }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -292,7 +291,40 @@ private fun TrainingDaysPickerCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (activePlanDef != null) {
+                val target = activePlanDef.daysPerWeek
+                val isSynced = selectedDays.size == target
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isSynced) "Active Target: $target Days/Week (Synced ✓)" 
+                               else "Active Target: $target Days/Week (Selected: ${selectedDays.size})",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = if (isSynced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+                    )
+                    if (!isSynced) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                            modifier = Modifier.clickable { onSyncWithPlan(target) }
+                        ) {
+                            Text(
+                                text = "Sync to $target Days",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+            }
 
             Text(
                 text = "Select 2 to 7 days per week. Reminders will only alert you on selected days.",
@@ -349,7 +381,9 @@ private fun TrainingDaysPickerCard(
 private fun PlanItemCard(
     plan: TrainingPlan,
     isActive: Boolean,
-    onSelectPlan: () -> Unit
+    selectedDaysCount: Int = 3,
+    onSelectPlan: () -> Unit,
+    onSyncSchedule: () -> Unit = {}
 ) {
     val (titleRes, descRes, icon, badgeColor) = when (plan.category) {
         "HEALTH" -> Quadruple(R.string.plan_health_title, R.string.plan_health_desc, Icons.Default.Favorite, MaterialTheme.colorScheme.primary)
@@ -402,10 +436,19 @@ private fun PlanItemCard(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    val daysScheduleText = if (isActive) {
+                        if (selectedDaysCount == plan.daysPerWeek) {
+                            "${plan.totalWeeks} Weeks · ${plan.daysPerWeek} Days/Week (Synced ✓)"
+                        } else {
+                            "${plan.totalWeeks} Weeks · $selectedDaysCount of ${plan.daysPerWeek} Days Scheduled"
+                        }
+                    } else {
+                        "${plan.totalWeeks} Weeks · ${plan.daysPerWeek} Days/Week"
+                    }
                     Text(
-                        text = "${plan.totalWeeks} Weeks · ${plan.daysPerWeek} Days/Week",
+                        text = daysScheduleText,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (isActive && selectedDaysCount != plan.daysPerWeek) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
                     )
                 }
 

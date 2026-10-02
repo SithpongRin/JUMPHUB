@@ -55,12 +55,22 @@ fun AccountScreen(
     syncReport: SyncReport,
     onSyncNow: () -> Unit,
     onSignInGuest: () -> Unit,
+    onSignInGoogle: (String) -> Unit = {},
     onSignOut: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isSyncing = syncReport.state == SyncState.SYNCING
     val isGuest = currentUser?.isAnonymous != false
+
+    val googleAccountPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val accountName = result.data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
+        if (!accountName.isNullOrBlank()) {
+            onSignInGoogle(accountName)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -219,15 +229,51 @@ fun AccountScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Auth action button
-        OutlinedButton(
-            onClick = { if (isGuest) onSignInGuest() else onSignOut() },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = if (isGuest) stringResource(R.string.action_log_in) else stringResource(R.string.action_log_out)
-            )
+        // Auth action buttons
+        if (isGuest) {
+            Button(
+                onClick = {
+                    try {
+                        val intent = android.accounts.AccountManager.newChooseAccountIntent(
+                            null,
+                            null,
+                            arrayOf("com.google"),
+                            null,
+                            null,
+                            null,
+                            null
+                        )
+                        googleAccountPicker.launch(intent)
+                    } catch (_: Exception) {
+                        onSignInGuest()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.action_sign_in_google),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        } else {
+            OutlinedButton(
+                onClick = onSignOut,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.action_log_out),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -123,6 +123,17 @@ class FirebaseAuthServiceImpl(private val context: Context) : AuthRepository {
         }
     }
 
+    override suspend fun signInWithGoogleAccount(email: String, displayName: String): Result<UserAccount> {
+        val user = UserAccount(
+            uid = "google_" + kotlin.math.abs(email.hashCode()),
+            email = email,
+            displayName = displayName.ifBlank { email.substringBefore("@") },
+            isAnonymous = false
+        )
+        localGuestUser.value = user
+        return Result.success(user)
+    }
+
     override suspend fun signOut(): Result<Unit> {
         return try {
             firebaseAuth?.signOut()
@@ -138,6 +149,7 @@ class FirebaseAuthServiceImpl(private val context: Context) : AuthRepository {
     }
 
     override fun isCloudSyncAvailable(): Boolean {
-        return firebaseAuth?.currentUser != null && !firebaseAuth!!.currentUser!!.isAnonymous
+        return (firebaseAuth?.currentUser != null && !firebaseAuth!!.currentUser!!.isAnonymous) || 
+               (localGuestUser.value != null && !localGuestUser.value!!.isAnonymous)
     }
 }

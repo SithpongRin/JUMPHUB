@@ -69,10 +69,9 @@ fun JumphubApp(container: AppContainer) {
             val currentRoute = navBackStackEntry?.destination?.route
             val currentDestination = NavDestination.fromRoute(currentRoute)
 
-            // Dynamic nav bar visibility driven by screen type and scroll state
-            var isNavVisibleByScroll by remember { mutableStateOf(true) }
+            // Dynamic nav bar visibility: stably visible on main tabs, hidden during sub-flows
             val isMainTab = currentDestination != null
-            val isFloatingNavVisible = isMainTab && isNavVisibleByScroll
+            val isFloatingNavVisible = isMainTab
 
             val coroutineScope = rememberCoroutineScope()
 
@@ -99,6 +98,18 @@ fun JumphubApp(container: AppContainer) {
                                         container.preferences.setProfile(age, heightCm, weightKg)
                                         container.preferences.setOnboardingCompleted(true)
                                         container.preferences.setParqAcknowledged(true)
+                                        container.authRepository.signInAsGuest()
+                                        navController.navigate(Screen.Home.route) {
+                                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                                        }
+                                    }
+                                },
+                                onSignInWithGoogle = { email, age, heightCm, weightKg ->
+                                    coroutineScope.launch {
+                                        container.preferences.setProfile(age, heightCm, weightKg)
+                                        container.preferences.setOnboardingCompleted(true)
+                                        container.preferences.setParqAcknowledged(true)
+                                        container.authRepository.signInWithGoogleAccount(email, email.substringBefore("@"))
                                         navController.navigate(Screen.Home.route) {
                                             popUpTo(Screen.Onboarding.route) { inclusive = true }
                                         }
@@ -136,7 +147,7 @@ fun JumphubApp(container: AppContainer) {
                                 onOpenPlan = { navController.navigate(Screen.Plans.route) },
                                 onOpenWeight = { navController.navigate(Screen.Weight.route) },
                                 onSyncNow = { homeViewModel.triggerSync() },
-                                onNavVisibilityChanged = { isNavVisibleByScroll = it }
+                                onNavVisibilityChanged = { }
                             )
                         }
 
@@ -158,6 +169,42 @@ fun JumphubApp(container: AppContainer) {
                                 onSelectPlan = { plan ->
                                     coroutineScope.launch {
                                         container.planRepository.selectPlan(plan.id, plan.category)
+                                        val recommendedDays = when (plan.daysPerWeek) {
+                                            2 -> setOf(2, 5) // Mon, Thu
+                                            3 -> setOf(2, 4, 6) // Mon, Wed, Fri
+                                            4 -> setOf(2, 4, 6, 7) // Mon, Wed, Fri, Sat
+                                            5 -> setOf(2, 3, 4, 5, 6) // Mon - Fri
+                                            6 -> setOf(2, 3, 4, 5, 6, 7) // Mon - Sat
+                                            7 -> setOf(1, 2, 3, 4, 5, 6, 7) // All
+                                            else -> setOf(2, 4, 6)
+                                        }
+                                        val csv = recommendedDays.sorted().joinToString(",")
+                                        container.preferences.setTrainingSchedule(
+                                            csv,
+                                            preferences.trainingReminderHour,
+                                            preferences.trainingReminderMinute,
+                                            preferences.trainingRemindersEnabled
+                                        )
+                                    }
+                                },
+                                onSyncScheduleWithPlan = { targetDaysCount ->
+                                    coroutineScope.launch {
+                                        val recommendedDays = when (targetDaysCount) {
+                                            2 -> setOf(2, 5)
+                                            3 -> setOf(2, 4, 6)
+                                            4 -> setOf(2, 4, 6, 7)
+                                            5 -> setOf(2, 3, 4, 5, 6)
+                                            6 -> setOf(2, 3, 4, 5, 6, 7)
+                                            7 -> setOf(1, 2, 3, 4, 5, 6, 7)
+                                            else -> setOf(2, 4, 6)
+                                        }
+                                        val csv = recommendedDays.sorted().joinToString(",")
+                                        container.preferences.setTrainingSchedule(
+                                            csv,
+                                            preferences.trainingReminderHour,
+                                            preferences.trainingReminderMinute,
+                                            preferences.trainingRemindersEnabled
+                                        )
                                     }
                                 },
                                 onToggleTrainingDay = { day ->
@@ -177,7 +224,7 @@ fun JumphubApp(container: AppContainer) {
                                         )
                                     }
                                 },
-                                onNavVisibilityChanged = { isNavVisibleByScroll = it }
+                                onNavVisibilityChanged = { }
                             )
                         }
 
@@ -191,7 +238,7 @@ fun JumphubApp(container: AppContainer) {
                                 onOpenSession = { sessionId ->
                                     navController.navigate("session_detail/$sessionId")
                                 },
-                                onNavVisibilityChanged = { isNavVisibleByScroll = it }
+                                onNavVisibilityChanged = { }
                             )
                         }
 
@@ -200,7 +247,7 @@ fun JumphubApp(container: AppContainer) {
 
                             RecordsScreen(
                                 records = records,
-                                onNavVisibilityChanged = { isNavVisibleByScroll = it }
+                                onNavVisibilityChanged = { }
                             )
                         }
 
@@ -252,7 +299,7 @@ fun JumphubApp(container: AppContainer) {
                                         }
                                     }
                                 },
-                                onNavVisibilityChanged = { isNavVisibleByScroll = it }
+                                onNavVisibilityChanged = { }
                             )
                         }
 
@@ -265,6 +312,12 @@ fun JumphubApp(container: AppContainer) {
                                 },
                                 onSignInGuest = {
                                     coroutineScope.launch { container.authRepository.signInAsGuest() }
+                                },
+                                onSignInGoogle = { email ->
+                                    coroutineScope.launch {
+                                        container.authRepository.signInWithGoogleAccount(email, email.substringBefore("@"))
+                                        container.syncEngine.syncNow()
+                                    }
                                 },
                                 onSignOut = {
                                     coroutineScope.launch { container.authRepository.signOut() }
