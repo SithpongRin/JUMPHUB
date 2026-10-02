@@ -72,4 +72,45 @@ object NotificationHelper {
             .setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }
+
+    /**
+     * Determines whether a workout reminder should trigger for the given day.
+     * Rules:
+     * - Only trigger on planned training days (never on rest days).
+     * - Do NOT trigger if a planned workout has already been completed today.
+     */
+    fun shouldTriggerReminder(
+        dayOfWeek: Int,
+        plannedDays: Set<Int>,
+        workoutCompletedToday: Boolean
+    ): Boolean {
+        if (!plannedDays.contains(dayOfWeek)) return false
+        if (workoutCompletedToday) return false
+        return true
+    }
+
+    fun buildTrainingReminderNotification(
+        context: Context,
+        planTitle: String = "Jump-Rope Session"
+    ): android.app.Notification {
+        createNotificationChannels(context)
+
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            context,
+            1,
+            intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return androidx.core.app.NotificationCompat.Builder(context, CHANNEL_REMINDERS)
+            .setContentTitle("Time to Jump! ⚡")
+            .setContentText("Your scheduled $planTitle is waiting for you today.")
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setCategory(androidx.core.app.NotificationCompat.CATEGORY_REMINDER)
+            .build()
+    }
 }

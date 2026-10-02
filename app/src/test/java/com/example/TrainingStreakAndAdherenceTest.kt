@@ -44,4 +44,42 @@ class TrainingStreakAndAdherenceTest {
         assert(currentStreak >= 3) { "Current training streak should persist across rest days" }
         assert(longestStreak >= currentStreak)
     }
+
+    @Test
+    fun testDetailedAdherenceCalculation() {
+        val scheduledDays = setOf(Calendar.MONDAY, Calendar.WEDNESDAY, Calendar.FRIDAY)
+        val now = System.currentTimeMillis()
+        val workoutDates = listOf(
+            now - 1 * 24 * 60 * 60 * 1000L,
+            now - 3 * 24 * 60 * 60 * 1000L
+        )
+
+        val adherence = TrainingAdherenceCalculator.calculateDetailedAdherence(
+            scheduledDays = scheduledDays,
+            workoutDatesMs = workoutDates
+        )
+
+        assertEquals(3, adherence.planned)
+        assertEquals(2, adherence.completed)
+        assertEquals(1, adherence.missed)
+        assertEquals(0, adherence.skipped)
+        assertEquals(66, adherence.completionPercentage)
+        assert(adherence.currentStreak >= 0)
+        assert(adherence.longestStreak >= adherence.currentStreak)
+    }
+
+    @Test
+    fun testWeeklyPlanProgressCalculator() {
+        val progressZero = com.example.domain.workout.WeeklyPlanProgressCalculator.calculateProgress(150, 0)
+        assertEquals(0f, progressZero, 0.001f)
+
+        val progressHalf = com.example.domain.workout.WeeklyPlanProgressCalculator.calculateProgress(150, 75)
+        assertEquals(0.5f, progressHalf, 0.001f)
+
+        val progressFull = com.example.domain.workout.WeeklyPlanProgressCalculator.calculateProgress(150, 150)
+        assertEquals(1.0f, progressFull, 0.001f)
+
+        val progressCap = com.example.domain.workout.WeeklyPlanProgressCalculator.calculateProgress(150, 200)
+        assertEquals(1.0f, progressCap, 0.001f)
+    }
 }

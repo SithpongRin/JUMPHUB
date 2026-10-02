@@ -22,4 +22,7 @@ interface PersonalRecordDao {
 
     @Query("DELETE FROM personal_records WHERE uuid = :uuid")
     suspend fun deleteRecordById(uuid: String)
+
+    @Query("DELETE FROM personal_records")
+    suspend fun clearRecords()
 }

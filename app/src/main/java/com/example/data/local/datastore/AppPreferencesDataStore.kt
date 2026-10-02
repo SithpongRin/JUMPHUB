@@ -41,12 +41,13 @@ data class UserPreferences(
     val userHeightCm: Float = 175f,
     val userWeightKg: Float? = null, // Optional; if null calories marked as unavailable
     // Training Schedule & Adherence
-    val trainingDays: String = "1,3,5", // 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+    val trainingDays: String = "2,4,6", // 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat, 1=Sun (Calendar constants)
     val trainingReminderHour: Int = 18,
     val trainingReminderMinute: Int = 0,
     val trainingRemindersEnabled: Boolean = true,
+    val dayReminderTimes: String = "", // Format: "day:hour:min,day:hour:min" e.g. "2:18:00,4:18:30"
     // Weekly Weight Check-in
-    val weeklyWeightCheckinDay: Int = 7, // 7 = Sunday
+    val weeklyWeightCheckinDay: Int = 1, // 1 = Sunday in Calendar constants
     val weeklyWeightCheckinHour: Int = 8,
     val weeklyWeightCheckinMinute: Int = 0
 ) {
@@ -54,6 +55,24 @@ data class UserPreferences(
         return trainingDays.split(",")
             .mapNotNull { it.trim().toIntOrNull() }
             .toSet()
+    }
+
+    /**
+     * Returns custom reminder time (hour, minute) for a specific day of week if configured,
+     * otherwise falls back to default (trainingReminderHour, trainingReminderMinute).
+     */
+    fun getReminderTimeForDay(dayOfWeek: Int): Pair<Int, Int> {
+        if (dayReminderTimes.isNotBlank()) {
+            val entry = dayReminderTimes.split(",")
+                .map { it.trim().split(":") }
+                .firstOrNull { it.size == 3 && it[0].toIntOrNull() == dayOfWeek }
+            if (entry != null) {
+                val h = entry[1].toIntOrNull() ?: trainingReminderHour
+                val m = entry[2].toIntOrNull() ?: trainingReminderMinute
+                return Pair(h, m)
+            }
+        }
+        return Pair(trainingReminderHour, trainingReminderMinute)
     }
 }
 
@@ -93,6 +112,7 @@ class AppPreferencesDataStore(private val context: Context) {
         val TRAINING_REMINDER_HOUR = intPreferencesKey("training_reminder_hour")
         val TRAINING_REMINDER_MINUTE = intPreferencesKey("training_reminder_minute")
         val TRAINING_REMINDERS_ENABLED = booleanPreferencesKey("training_reminders_enabled")
+        val DAY_REMINDER_TIMES = stringPreferencesKey("day_reminder_times")
 
         // Weekly weight check-in keys
         val WEEKLY_WEIGHT_CHECKIN_DAY = intPreferencesKey("weekly_weight_checkin_day")
@@ -128,11 +148,12 @@ class AppPreferencesDataStore(private val context: Context) {
             userAge = preferences[Keys.USER_AGE] ?: 28,
             userHeightCm = preferences[Keys.USER_HEIGHT_CM] ?: 175f,
             userWeightKg = if (weight != null && weight > 0f) weight else null,
-            trainingDays = preferences[Keys.TRAINING_DAYS] ?: "1,3,5",
+            trainingDays = preferences[Keys.TRAINING_DAYS] ?: "2,4,6",
             trainingReminderHour = preferences[Keys.TRAINING_REMINDER_HOUR] ?: 18,
             trainingReminderMinute = preferences[Keys.TRAINING_REMINDER_MINUTE] ?: 0,
             trainingRemindersEnabled = preferences[Keys.TRAINING_REMINDERS_ENABLED] ?: true,
-            weeklyWeightCheckinDay = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_DAY] ?: 7,
+            dayReminderTimes = preferences[Keys.DAY_REMINDER_TIMES] ?: "",
+            weeklyWeightCheckinDay = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_DAY] ?: 1,
             weeklyWeightCheckinHour = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_HOUR] ?: 8,
             weeklyWeightCheckinMinute = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_MINUTE] ?: 0
         )
@@ -210,12 +231,19 @@ class AppPreferencesDataStore(private val context: Context) {
         }
     }
 
-    suspend fun setTrainingSchedule(daysCsv: String, hour: Int, minute: Int, enabled: Boolean) {
+    suspend fun setTrainingSchedule(daysCsv: String, hour: Int, minute: Int, enabled: Boolean, dayTimesCsv: String = "") {
         context.dataStore.edit {
             it[Keys.TRAINING_DAYS] = daysCsv
             it[Keys.TRAINING_REMINDER_HOUR] = hour
             it[Keys.TRAINING_REMINDER_MINUTE] = minute
             it[Keys.TRAINING_REMINDERS_ENABLED] = enabled
+            it[Keys.DAY_REMINDER_TIMES] = dayTimesCsv
+        }
+    }
+
+    suspend fun setDayReminderTimes(dayTimesCsv: String) {
+        context.dataStore.edit {
+            it[Keys.DAY_REMINDER_TIMES] = dayTimesCsv
         }
     }
 

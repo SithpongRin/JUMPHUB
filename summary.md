@@ -93,10 +93,18 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - `WorkoutStateMachineTest`: Countdown sequence (3 $\to$ 2 $\to$ 1 $\to$ Start), verification that jump counting is inactive during countdown, pause/resume, and manual correction.
 - `JumpDetectorTest`: Peak detection, refractory period rejection, sensitivity thresholds, baseline gravity settling.
 - `WorkoutMetricsCalculatorTest`: Division-by-zero safety on active seconds, standard JPM, calorie formula with/without weight, peak rolling window.
-- `TrainingStreakAndAdherenceTest`: Adherence percentage, verification that scheduled rest days do not break training streak.
+- `TrainingStreakAndAdherenceTest`: Adherence percentage, detailed adherence stats (planned, completed, missed, skipped, completion rate, current/longest streak), scheduled rest days do not break training streak, weekly plan progress calculator.
+- `NotificationReminderTest`: Reminder dispatch only on planned training days, reminder suppression on planned rest days, and reminder suppression when workout was already completed today.
 - `ExampleRobolectricTest`: Room database initialization, session insert/query, and localized app name verification.
 
 ---
+
+## 10. Verification & Build Status
+- **Java Runtime**: OpenJDK 21 (Android Studio JBR 21)
+- **Android Target**: compileSdk / targetSdk 36, minSdk 26
+- **Unit Test Execution**: `:app:testDebugUnitTest` executed and passed 100% (33 tasks, 0 failures).
+- **Assemble Build**: `:app:assembleDebug` built cleanly with zero compilation errors, generating debug APK (`build/outputs/apk/debug/app-debug.apk`).
+- **Signing & Assets**: Debug keystore present at project root, Room schema v1 preserved without destructive migrations.
 
 ## 10. Build Instructions
 - Run unit test suite: `gradle :app:testDebugUnitTest`

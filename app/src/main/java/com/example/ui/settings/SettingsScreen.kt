@@ -66,6 +66,7 @@ fun SettingsScreen(
     onSetVoiceLanguage: (String) -> Unit,
     onSetVoiceCueMode: (String) -> Unit,
     onSetVoiceJumpInterval: (Int) -> Unit,
+    onSetVoiceTimeInterval: (Int) -> Unit = {},
     onSetVoiceTargetMilestones: (Boolean) -> Unit,
     onSetThemeMode: (String) -> Unit,
     onSetVoiceEnabled: (Boolean) -> Unit,
@@ -180,6 +181,7 @@ fun SettingsScreen(
                     "EVERY_JUMP" to "Every Jump",
                     "EVERY_N_JUMPS" to "Every N Jumps",
                     "TARGET_MILESTONES" to "Milestones",
+                    "EVERY_N_MINUTES" to "Every N Min",
                     "CUSTOM" to "Custom"
                 )
 
@@ -246,6 +248,16 @@ fun SettingsScreen(
                         currentValue = "${preferences.voiceJumpInterval} jumps",
                         options = listOf("10" to "10", "25" to "25", "50" to "50", "100" to "100"),
                         onSelect = { onSetVoiceJumpInterval(it.toIntOrNull() ?: 25) }
+                    )
+                }
+
+                if (preferences.voiceCueMode == "EVERY_N_MINUTES" || preferences.voiceCueMode == "CUSTOM") {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    SettingsChoiceRow(
+                        label = "Time Interval",
+                        currentValue = "${preferences.voiceTimeIntervalMinutes} min",
+                        options = listOf("1" to "1 min", "2" to "2 min", "5" to "5 min"),
+                        onSelect = { onSetVoiceTimeInterval(it.toIntOrNull() ?: 1) }
                     )
                 }
 

@@ -113,6 +113,16 @@ object TrainingStreakCalculator {
     }
 }
 
+data class AdherenceDetails(
+    val planned: Int,
+    val completed: Int,
+    val missed: Int,
+    val skipped: Int,
+    val completionPercentage: Int,
+    val currentStreak: Int,
+    val longestStreak: Int
+)
+
 object TrainingAdherenceCalculator {
 
     /**
@@ -124,5 +134,50 @@ object TrainingAdherenceCalculator {
         if (plannedDaysCount <= 0) return 100
         val percentage = (completedSessionsCount.toFloat() / plannedDaysCount) * 100f
         return percentage.coerceIn(0f, 100f).toInt()
+    }
+
+    /**
+     * Computes comprehensive adherence statistics including planned, completed, missed, skipped,
+     * adherence percentage, current streak, and longest streak.
+     */
+    fun calculateDetailedAdherence(
+        scheduledDays: Set<Int>,
+        workoutDatesMs: List<Long>,
+        skippedDatesMs: List<Long> = emptyList()
+    ): AdherenceDetails {
+        val (currentStreak, longestStreak) = TrainingStreakCalculator.calculateTrainingStreak(
+            scheduledDays = scheduledDays,
+            workoutDatesMs = workoutDatesMs
+        )
+
+        val plannedCount = scheduledDays.size
+        // Calculate sessions completed in the current calendar week (last 7 days window)
+        val now = System.currentTimeMillis()
+        val sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000L
+        val weekSessions = workoutDatesMs.filter { it >= sevenDaysAgo }
+        val completedCount = weekSessions.size
+        val skippedCount = skippedDatesMs.filter { it >= sevenDaysAgo }.size
+        val missedCount = (plannedCount - completedCount - skippedCount).coerceAtLeast(0)
+        val completionPct = calculateAdherence(plannedCount, completedCount)
+
+        return AdherenceDetails(
+            planned = plannedCount,
+            completed = completedCount,
+            missed = missedCount,
+            skipped = skippedCount,
+            completionPercentage = completionPct,
+            currentStreak = currentStreak,
+            longestStreak = longestStreak
+        )
+    }
+}
+
+object WeeklyPlanProgressCalculator {
+    /**
+     * Calculates weekly plan progression given target weekly volume and completed volume.
+     */
+    fun calculateProgress(targetMinutes: Int, completedMinutes: Int): Float {
+        if (targetMinutes <= 0) return 1.0f
+        return (completedMinutes.toFloat() / targetMinutes).coerceIn(0f, 1f)
     }
 }

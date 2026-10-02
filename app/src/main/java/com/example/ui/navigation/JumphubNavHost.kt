@@ -210,6 +210,9 @@ fun JumphubApp(container: AppContainer) {
                                 onSetVoiceJumpInterval = { interval ->
                                     coroutineScope.launch { container.preferences.setVoiceJumpInterval(interval) }
                                 },
+                                onSetVoiceTimeInterval = { minutes ->
+                                    coroutineScope.launch { container.preferences.setVoiceTimeIntervalMinutes(minutes) }
+                                },
                                 onSetVoiceTargetMilestones = { enabled ->
                                     coroutineScope.launch { container.preferences.setVoiceTargetMilestonesEnabled(enabled) }
                                 },

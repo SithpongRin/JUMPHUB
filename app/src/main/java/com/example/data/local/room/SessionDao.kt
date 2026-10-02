@@ -12,6 +12,9 @@ interface SessionDao {
     @Query("SELECT * FROM sessions ORDER BY date DESC")
     fun getAllSessions(): Flow<List<SessionEntity>>
 
+    @Query("SELECT * FROM sessions ORDER BY date DESC")
+    suspend fun getAllSessionsSync(): List<SessionEntity>
+
     @Query("SELECT * FROM sessions WHERE uuid = :uuid LIMIT 1")
     suspend fun getSessionById(uuid: String): SessionEntity?
 

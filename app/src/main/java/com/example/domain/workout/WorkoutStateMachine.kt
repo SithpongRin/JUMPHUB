@@ -161,6 +161,17 @@ class WorkoutStateMachine(
 
                         checkTimeCues(newActiveSec, current.totalJumps)
 
+                        // 10 seconds remaining cue
+                        if (voicePhaseCuesEnabled && current.roundTargetSeconds > 15 && current.roundTargetSeconds - newRoundActiveSec == 10) {
+                            audioCueEngine.postCue(
+                                AudioCueItem(
+                                    priority = AudioPriority.HIGH,
+                                    textEn = "Ten seconds remaining",
+                                    textKm = "សល់ដប់វិនាទីទៀត"
+                                )
+                            )
+                        }
+
                         // Check round transition if round duration is exceeded
                         if (current.roundTargetSeconds > 0 && newRoundActiveSec >= current.roundTargetSeconds) {
                             if (current.currentRound < current.totalRounds) {

@@ -69,4 +69,18 @@ class SyncEngine(
             return report
         }
     }
+
+    /**
+     * Safely applies incoming sessions from cloud to local Room database.
+     * Guaranteed never to recreate sessions that have a local deletion tombstone.
+     */
+    suspend fun syncInboundSession(inboundSession: com.example.data.local.room.SessionEntity): Boolean {
+        val isTombstoned = database.syncMetadataDao().isSessionTombstoned(inboundSession.uuid) > 0
+        if (isTombstoned) {
+            // Drop inbound session: user has explicitly deleted this session locally!
+            return false
+        }
+        database.sessionDao().insertSession(inboundSession)
+        return true
+    }
 }

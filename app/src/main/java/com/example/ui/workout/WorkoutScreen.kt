@@ -284,28 +284,52 @@ private fun CenterJumpCounter(workoutState: WorkoutState) {
 
 @Composable
 private fun LiveMetricsBar(workoutState: WorkoutState) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        LiveMetricBox(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.Speed,
-            value = "${workoutState.currentCadenceJpm.toInt()}",
-            label = "RPM"
-        )
-        LiveMetricBox(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.Timer,
-            value = "${workoutState.elapsedSeconds / 60}m ${workoutState.elapsedSeconds % 60}s",
-            label = "Elapsed"
-        )
-        LiveMetricBox(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.LocalFireDepartment,
-            value = workoutState.estimatedCalories?.let { "${it.toInt()} kcal" } ?: "--",
-            label = "Calories"
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            LiveMetricBox(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Speed,
+                value = "${workoutState.currentCadenceJpm.toInt()}",
+                label = "JPM"
+            )
+            val mins = workoutState.activeSeconds / 60
+            val secs = workoutState.activeSeconds % 60
+            LiveMetricBox(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Timer,
+                value = String.format("%02d:%02d", mins, secs),
+                label = "Active Time"
+            )
+            LiveMetricBox(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Timer,
+                value = "${workoutState.elapsedSeconds / 60}m ${workoutState.elapsedSeconds % 60}s",
+                label = "Total Elapsed"
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            LiveMetricBox(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Speed,
+                value = if (workoutState.roundTargetSeconds > 0) "${workoutState.roundTargetSeconds}s" else "${workoutState.targetJumps} jumps",
+                label = "Round Target"
+            )
+            LiveMetricBox(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.LocalFireDepartment,
+                value = workoutState.estimatedCalories?.let { "${it.toInt()} kcal" } ?: "Unavailable",
+                label = "Calories (Est)"
+            )
+        }
     }
 }
 
