@@ -125,7 +125,12 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - **Scroll Jank & Smoothness**: Removed scroll-triggered hide/show bottom nav recompositions from all screens, keeping the floating bar stably docked at the bottom with 120dp padding. Heavy view model calculations offloaded to `Dispatchers.Default`.
 - **Google Account Authentication**: Native Android `AccountManager.newChooseAccountIntent` integration in Onboarding and Account screens connecting real device Google accounts with Firestore cloud sync.
 - **Plan Schedule Synchronization**: Automatic synchronization of training days when choosing a program (e.g. Endurance Builder auto-syncs 4 days), status indicators in schedule picker, and 1-tap "Sync with Plan" button.
-- **GitHub Release**: Tag `v1.0.2` with `JUMPHUB-v1.0.2.apk`.
+- **GitHub Release**: Tag `v1.0.3` with `JUMPHUB-v1.0.3.apk`.
+- **v1.0.3 Force Close Fix**:
+  - Root cause: `requestAppPermissions()` was invoked synchronously inside `ComponentActivity.onCreate()` before window attachment, triggering `BadTokenException` / lifecycle crashes on Android 14/15 (HyperOS/MIUI).
+  - Fix: Moved runtime permission request inside Compose `LaunchedEffect(Unit)` with `try-catch`.
+  - Flow safety: Removed `.flowOn(Dispatchers.Default)` on `HomeViewModel.uiState` to prevent Room query flow cancellation collisions.
+  - Safe In-App Update: Replaced unsafe `asset.optString(key, null)` with null-safe check and wrapped auto-update check in `LaunchedEffect` with try-catch.
 
 ---
 
@@ -133,3 +138,4 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - Run unit test suite: `.\gradlew.bat :app:testDebugUnitTest`
 - Assemble debug APK: `.\gradlew.bat :app:assembleDebug`
 - Bump version for update: modify `versionCode` & `versionName` in `app/build.gradle.kts`, rebuild APK, and draft new tag release on GitHub.
+
