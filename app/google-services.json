@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108597728382",
+    "project_id": "jumphub-95d31",
+    "storage_bucket": "jumphub-95d31.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108597728382:android:b85377f60c05e1281ef42f",
+        "android_client_info": {
+          "package_name": "com.aistudio.jumphub.trvkmq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB46tjGCGf2jo7PN6t6btIWAdTzXoCGCCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
