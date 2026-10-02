@@ -82,13 +82,27 @@ Configurable through DataStore with independent Voice Language and UI Language:
 ---
 
 ## 8. Database & Schema
-- Room database: `jumphub_database` (version 1).
-- Non-destructive migration path: All new preference configurations (voice modes, training days, athlete profile) are persisted in DataStore, keeping Room schema backward compatible.
-- Entities: `SessionEntity`, `RoundRecordEntity`, `UserPlanEntity`, `PlanDefinitionEntity`, `ReminderScheduleEntity`, `BodyMetricEntity`, `PersonalRecordEntity`, `DailyStatEntity`, `WeeklyStatEntity`, `MonthlyStatEntity`, `SyncMetadataEntity`.
+- **Room Local Database**: `jumphub_database` (version 1).
+  - Non-destructive migration path: All new preference configurations (voice modes, training days, athlete profile) are persisted in DataStore, keeping Room schema backward compatible.
+  - Entities: `SessionEntity`, `RoundRecordEntity`, `UserPlanEntity`, `PlanDefinitionEntity`, `ReminderScheduleEntity`, `BodyMetricEntity`, `PersonalRecordEntity`, `DailyStatEntity`, `WeeklyStatEntity`, `MonthlyStatEntity`, `SyncMetadataEntity`.
+- **Cloud Firestore Database**:
+  - Integrated via `google-services.json` (`project_id: jumphub-95d31`) and `libs.firebase.firestore`.
+  - Collections schema: `users/{userId}/sessions/{sessionUuid}` preserving workout records with full metrics.
+  - Cloud sync handled via `SyncEngine.kt` with tombstone protection (`syncInboundSession`) ensuring locally deleted workouts are never recreated by incoming cloud sync.
 
 ---
 
-## 9. Test Suite & Verification
+## 9. In-App Auto-Update Engine
+- **Engine**: Implemented via `com.example.service.update.InAppUpdateManager`.
+- **Check Workflow**: Communicates directly with GitHub Releases API (`https://api.github.com/repos/SithpongRin/JUMPHUB/releases/latest`) to detect semantic version upgrades against `BuildConfig.VERSION_NAME`.
+- **Download & Install**:
+  - Downloads APK directly in background via Android `DownloadManager` with notification visibility.
+  - Triggers native Android PackageInstaller prompt on download completion via `androidx.core.content.FileProvider` (`res/xml/file_paths.xml`) and `android.permission.REQUEST_INSTALL_PACKAGES`.
+  - User can update with a single tap inside **Settings $\to$ About & Updates (Check for Updates)** without uninstalling or losing local workout history.
+
+---
+
+## 10. Test Suite & Verification
 Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - `WorkoutStateMachineTest`: Countdown sequence (3 $\to$ 2 $\to$ 1 $\to$ Start), verification that jump counting is inactive during countdown, pause/resume, and manual correction.
 - `JumpDetectorTest`: Peak detection, refractory period rejection, sensitivity thresholds, baseline gravity settling.
@@ -99,13 +113,17 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 
 ---
 
-## 10. Verification & Build Status
+## 11. Verification & Build Status
 - **Java Runtime**: OpenJDK 21 (Android Studio JBR 21)
 - **Android Target**: compileSdk / targetSdk 36, minSdk 26
 - **Unit Test Execution**: `:app:testDebugUnitTest` executed and passed 100% (33 tasks, 0 failures).
 - **Assemble Build**: `:app:assembleDebug` built cleanly with zero compilation errors, generating debug APK (`build/outputs/apk/debug/app-debug.apk`).
 - **Signing & Assets**: Debug keystore present at project root, Room schema v1 preserved without destructive migrations.
+- **GitHub Release**: Tag `v1.0.0` published with `JUMPHUB-v1.0.apk` containing in-app updater capability.
 
-## 10. Build Instructions
-- Run unit test suite: `gradle :app:testDebugUnitTest`
-- Compile applet: `compile_applet`
+---
+
+## 12. Build & Release Instructions
+- Run unit test suite: `.\gradlew.bat :app:testDebugUnitTest`
+- Assemble debug APK: `.\gradlew.bat :app:assembleDebug`
+- Bump version for update: modify `versionCode` & `versionName` in `app/build.gradle.kts`, rebuild APK, and draft new tag release on GitHub.
