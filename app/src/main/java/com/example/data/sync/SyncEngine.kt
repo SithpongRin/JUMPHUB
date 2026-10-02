@@ -46,7 +46,39 @@ class SyncEngine(
                 return _syncReport.value
             }
 
-            // Mark local pending sessions as synced for now, in Phase 6 Firestore sync takes over
+            // Sync pending sessions to Firestore if cloud sync available
+            val firestore = try {
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (firestore != null && user != null) {
+                val userSessionsCollection = firestore.collection("users").document(user.uid).collection("sessions")
+                for (session in pendingSessions) {
+                    val sessionMap = hashMapOf(
+                        "uuid" to session.uuid,
+                        "date" to session.date,
+                        "planId" to (session.planId ?: ""),
+                        "week" to (session.week ?: 0),
+                        "sessionRef" to (session.sessionRef ?: ""),
+                        "activeSec" to session.activeSec,
+                        "totalJumps" to session.totalJumps,
+                        "detectedTotal" to session.detectedTotal,
+                        "correctedTotal" to session.correctedTotal,
+                        "avgRate" to session.avgRate,
+                        "bestStreak" to session.bestStreak,
+                        "calories" to (session.calories?.toDouble() ?: 0.0),
+                        "rpe" to (session.rpe ?: 0),
+                        "completionPct" to session.completionPct,
+                        "weightSnapshot" to (session.weightSnapshot?.toDouble() ?: 0.0),
+                        "syncStatus" to "SYNCED",
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                    userSessionsCollection.document(session.uuid).set(sessionMap)
+                }
+            }
+
             val now = System.currentTimeMillis()
             for (session in pendingSessions) {
                 database.sessionDao().updateSyncStatus(session.uuid, "SYNCED", now)
