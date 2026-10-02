@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -81,7 +82,14 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
     var showResetDialog by remember { mutableStateOf(false) }
+    var isCheckingUpdates by remember { mutableStateOf(false) }
+    var updateInfo by remember { mutableStateOf<com.example.service.update.AppUpdateInfo?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var updateMessage by remember { mutableStateOf<String?>(null) }
 
     var ageInput by remember(preferences.userAge) { mutableStateOf("${preferences.userAge}") }
     var heightInput by remember(preferences.userHeightCm) { mutableStateOf("${preferences.userHeightCm.toInt()}") }
@@ -440,8 +448,22 @@ fun SettingsScreen(
             SettingsCard(title = stringResource(R.string.settings_section_about), icon = Icons.Default.SystemUpdate) {
                 SettingsActionRow(
                     label = stringResource(R.string.action_check_updates),
-                    value = "v1.1.0",
-                    onClick = onCheckUpdates
+                    value = if (isCheckingUpdates) "Checking..." else "v${com.example.BuildConfig.VERSION_NAME}",
+                    onClick = {
+                        if (!isCheckingUpdates) {
+                            isCheckingUpdates = true
+                            coroutineScope.launch {
+                                val info = com.example.service.update.InAppUpdateManager.checkForUpdate()
+                                isCheckingUpdates = false
+                                updateInfo = info
+                                if (info.hasUpdate) {
+                                    showUpdateDialog = true
+                                } else {
+                                    android.widget.Toast.makeText(context, "You are using the latest version (v${com.example.BuildConfig.VERSION_NAME})", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -464,6 +486,48 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showUpdateDialog && updateInfo != null) {
+        val info = updateInfo!!
+        AlertDialog(
+            onDismissRequest = { showUpdateDialog = false },
+            title = { Text("New Version Available: v${info.latestVersionName}") },
+            text = {
+                Column {
+                    Text("A new version of JUMPHUB is available. Tap update to download and install now without losing your workout data.")
+                    if (info.releaseNotes.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = info.releaseNotes,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showUpdateDialog = false
+                        info.downloadUrl?.let { url ->
+                            com.example.service.update.InAppUpdateManager.startDownloadAndInstall(
+                                context = context,
+                                downloadUrl = url,
+                                versionName = info.latestVersionName
+                            )
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.action_update_now))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpdateDialog = false }) {
+                    Text(stringResource(R.string.action_later))
+                }
+            }
+        )
     }
 
     if (showResetDialog) {
