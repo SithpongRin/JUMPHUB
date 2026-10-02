@@ -20,6 +20,10 @@ data class TrainingPlan(
     val totalWeeks: Int,
     val daysPerWeek: Int,
     val category: String,
+    val rounds: Int = 8,
+    val workSeconds: Int = 30,
+    val restSeconds: Int = 60,
+    val targetJumps: Int = 500,
     val intervals: List<PlanInterval> = emptyList()
 )
 

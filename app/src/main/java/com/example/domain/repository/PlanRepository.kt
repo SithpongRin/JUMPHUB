@@ -9,4 +9,5 @@ interface PlanRepository {
     fun getActivePlan(): Flow<UserActivePlan?>
     suspend fun selectPlan(planId: String, name: String)
     suspend fun updatePlanProgress(week: Int, day: Int)
+    suspend fun getPlanById(planId: String): TrainingPlan?
 }

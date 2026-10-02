@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -249,6 +250,33 @@ fun OnboardingScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // In-App Notification & Foreground Permissions Guidance Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.HealthAndSafety,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "កម្មវិធីនឹងស្នើសុំការអនុញ្ញាត Notification និង Sensor នៅក្នុង App ផ្ទាល់ ដើម្បីអាចរាប់ចំនួនលោត និងរំលឹកការហាត់តាមកាលវិភាគ។",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         Button(
             onClick = {
                 val age = ageInput.toIntOrNull() ?: 28
@@ -267,6 +295,35 @@ fun OnboardingScreen(
             Text(
                 text = stringResource(R.string.onboarding_get_started),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Sign In with Google Option
+        OutlinedButton(
+            onClick = {
+                val age = ageInput.toIntOrNull() ?: 28
+                val height = heightInput.toFloatOrNull() ?: 175f
+                val weight = weightInput.toFloatOrNull()
+                onCompleteOnboarding(age, height, weight)
+            },
+            enabled = disclaimerAccepted,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.action_sign_in_google) + " / Guest",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
             )
         }
 

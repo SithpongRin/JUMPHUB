@@ -114,15 +114,24 @@ fun JumphubApp(container: AppContainer) {
                             HomeScreen(
                                 uiState = homeUiState,
                                 onStartWorkout = {
-                                    val intent = Intent(context, WorkoutForegroundService::class.java).apply {
-                                        action = WorkoutForegroundService.ACTION_START
-                                        putExtra(WorkoutForegroundService.EXTRA_ROUNDS, 8)
-                                        putExtra(WorkoutForegroundService.EXTRA_ROUND_DURATION, 30)
-                                        putExtra(WorkoutForegroundService.EXTRA_REST_DURATION, 60)
-                                        putExtra(WorkoutForegroundService.EXTRA_TARGET_JUMPS, 500)
+                                    val activePlan = homeUiState.activePlan
+                                    coroutineScope.launch {
+                                        val planDef = activePlan?.let { container.planRepository.getPlanById(it.planId) }
+                                        val rounds = planDef?.rounds ?: 8
+                                        val roundDuration = planDef?.workSeconds ?: 30
+                                        val restDuration = planDef?.restSeconds ?: 60
+                                        val targetJumps = planDef?.targetJumps ?: 500
+
+                                        val intent = Intent(context, WorkoutForegroundService::class.java).apply {
+                                            action = WorkoutForegroundService.ACTION_START
+                                            putExtra(WorkoutForegroundService.EXTRA_ROUNDS, rounds)
+                                            putExtra(WorkoutForegroundService.EXTRA_ROUND_DURATION, roundDuration)
+                                            putExtra(WorkoutForegroundService.EXTRA_REST_DURATION, restDuration)
+                                            putExtra(WorkoutForegroundService.EXTRA_TARGET_JUMPS, targetJumps)
+                                        }
+                                        context.startService(intent)
+                                        navController.navigate(Screen.Workout.route)
                                     }
-                                    context.startService(intent)
-                                    navController.navigate(Screen.Workout.route)
                                 },
                                 onOpenPlan = { navController.navigate(Screen.Plans.route) },
                                 onOpenWeight = { navController.navigate(Screen.Weight.route) },

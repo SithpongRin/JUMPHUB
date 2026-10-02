@@ -14,7 +14,7 @@ import java.util.UUID
 
 class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
 
-    // Default seeded plans as specified in the master prompt (Health 8-week, Endurance, Fat loss, Quick, Free)
+    // Default seeded plans based on WHO physical activity recommendations (150-300 min moderate / 75-150 min vigorous per week)
     private val defaultPlans = listOf(
         TrainingPlan(
             id = "plan_health",
@@ -23,11 +23,15 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
             totalWeeks = 8,
             daysPerWeek = 3,
             category = "HEALTH",
+            rounds = 8,
+            workSeconds = 45,
+            restSeconds = 45,
+            targetJumps = 400,
             intervals = listOf(
-                PlanInterval(IntervalType.WARMUP, durationSec = 300),
-                PlanInterval(IntervalType.JUMP, durationSec = 30),
-                PlanInterval(IntervalType.REST, durationSec = 60),
-                PlanInterval(IntervalType.COOLDOWN, durationSec = 300)
+                PlanInterval(IntervalType.WARMUP, durationSec = 180),
+                PlanInterval(IntervalType.JUMP, durationSec = 45),
+                PlanInterval(IntervalType.REST, durationSec = 45),
+                PlanInterval(IntervalType.COOLDOWN, durationSec = 180)
             )
         ),
         TrainingPlan(
@@ -37,11 +41,15 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
             totalWeeks = 8,
             daysPerWeek = 4,
             category = "ENDURANCE",
+            rounds = 10,
+            workSeconds = 60,
+            restSeconds = 30,
+            targetJumps = 800,
             intervals = listOf(
-                PlanInterval(IntervalType.WARMUP, durationSec = 300),
+                PlanInterval(IntervalType.WARMUP, durationSec = 180),
                 PlanInterval(IntervalType.JUMP, durationSec = 60),
-                PlanInterval(IntervalType.REST, durationSec = 60),
-                PlanInterval(IntervalType.COOLDOWN, durationSec = 300)
+                PlanInterval(IntervalType.REST, durationSec = 30),
+                PlanInterval(IntervalType.COOLDOWN, durationSec = 180)
             )
         ),
         TrainingPlan(
@@ -51,11 +59,15 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
             totalWeeks = 6,
             daysPerWeek = 4,
             category = "FAT_LOSS",
+            rounds = 12,
+            workSeconds = 30,
+            restSeconds = 30,
+            targetJumps = 600,
             intervals = listOf(
-                PlanInterval(IntervalType.WARMUP, durationSec = 300),
-                PlanInterval(IntervalType.JUMP, durationSec = 45),
-                PlanInterval(IntervalType.REST, durationSec = 45),
-                PlanInterval(IntervalType.COOLDOWN, durationSec = 300)
+                PlanInterval(IntervalType.WARMUP, durationSec = 180),
+                PlanInterval(IntervalType.JUMP, durationSec = 30),
+                PlanInterval(IntervalType.REST, durationSec = 30),
+                PlanInterval(IntervalType.COOLDOWN, durationSec = 180)
             )
         ),
         TrainingPlan(
@@ -65,11 +77,15 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
             totalWeeks = 1,
             daysPerWeek = 5,
             category = "QUICK",
+            rounds = 5,
+            workSeconds = 60,
+            restSeconds = 30,
+            targetJumps = 450,
             intervals = listOf(
-                PlanInterval(IntervalType.WARMUP, durationSec = 120),
+                PlanInterval(IntervalType.WARMUP, durationSec = 60),
                 PlanInterval(IntervalType.JUMP, durationSec = 60),
                 PlanInterval(IntervalType.REST, durationSec = 30),
-                PlanInterval(IntervalType.COOLDOWN, durationSec = 120)
+                PlanInterval(IntervalType.COOLDOWN, durationSec = 60)
             )
         ),
         TrainingPlan(
@@ -79,6 +95,10 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
             totalWeeks = 1,
             daysPerWeek = 7,
             category = "FREE",
+            rounds = 1,
+            workSeconds = 0,
+            restSeconds = 0,
+            targetJumps = 1000,
             intervals = emptyList()
         )
     )
@@ -120,5 +140,9 @@ class PlanRepositoryImpl(private val database: AppDatabase) : PlanRepository {
 
     override suspend fun updatePlanProgress(week: Int, day: Int) {
         // Updated in subsequent phases when active plan advances
+    }
+
+    override suspend fun getPlanById(planId: String): TrainingPlan? {
+        return defaultPlans.find { it.id == planId }
     }
 }
