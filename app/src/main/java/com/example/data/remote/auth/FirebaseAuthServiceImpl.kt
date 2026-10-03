@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class FirebaseAuthServiceImpl(private val context: Context) : AuthRepository {
@@ -29,39 +30,53 @@ class FirebaseAuthServiceImpl(private val context: Context) : AuthRepository {
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w("FirebaseAuthService", "Firebase not available, running in local-first mode: ${e.message}")
             null
         }
     }
 
     override val currentUserFlow: Flow<UserAccount?> = callbackFlow {
-        val auth = firebaseAuth
+        val auth = try { firebaseAuth } catch (e: Throwable) { null }
         if (auth == null) {
-            // Local-first guest flow
-            localGuestUser.collect { user ->
-                trySend(user)
+            trySend(localGuestUser.value)
+            val job = launch {
+                localGuestUser.collect { user ->
+                    trySend(user)
+                }
             }
-            awaitClose { }
+            awaitClose { job.cancel() }
         } else {
             val listener = FirebaseAuth.AuthStateListener { firebaseAuthInstance ->
-                val fbUser = firebaseAuthInstance.currentUser
-                if (fbUser != null) {
-                    trySend(
-                        UserAccount(
-                            uid = fbUser.uid,
-                            email = fbUser.email,
-                            displayName = fbUser.displayName ?: (if (fbUser.isAnonymous) "Guest Athlete" else "Athlete"),
-                            isAnonymous = fbUser.isAnonymous
+                try {
+                    val fbUser = firebaseAuthInstance.currentUser
+                    if (fbUser != null) {
+                        trySend(
+                            UserAccount(
+                                uid = fbUser.uid,
+                                email = fbUser.email,
+                                displayName = fbUser.displayName ?: (if (fbUser.isAnonymous) "Guest Athlete" else "Athlete"),
+                                isAnonymous = fbUser.isAnonymous
+                            )
                         )
-                    )
-                } else {
+                    } else {
+                        trySend(localGuestUser.value)
+                    }
+                } catch (e: Throwable) {
                     trySend(localGuestUser.value)
                 }
             }
-            auth.addAuthStateListener(listener)
+            try {
+                auth.addAuthStateListener(listener)
+            } catch (e: Throwable) {
+                trySend(localGuestUser.value)
+            }
             awaitClose {
-                auth.removeAuthStateListener(listener)
+                try {
+                    auth.removeAuthStateListener(listener)
+                } catch (e: Throwable) {
+                    // ignore
+                }
             }
         }
     }

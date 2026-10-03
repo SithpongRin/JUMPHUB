@@ -51,6 +51,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.crash.CrashReportActivity"
+            android:exported="false"
+            android:process=":crash"
+            android:theme="@style/Theme.MyApplication" />
+
         <service
             android:name=".service.WorkoutForegroundService"
             android:exported="false"
