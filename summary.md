@@ -125,12 +125,13 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - **Scroll Jank & Smoothness**: Removed scroll-triggered hide/show bottom nav recompositions from all screens, keeping the floating bar stably docked at the bottom with 120dp padding. Heavy view model calculations offloaded to `Dispatchers.Default`.
 - **Google Account Authentication**: Native Android `AccountManager.newChooseAccountIntent` integration in Onboarding and Account screens connecting real device Google accounts with Firestore cloud sync.
 - **Plan Schedule Synchronization**: Automatic synchronization of training days when choosing a program (e.g. Endurance Builder auto-syncs 4 days), status indicators in schedule picker, and 1-tap "Sync with Plan" button.
-- **GitHub Release**: Tag `v1.0.3` with `JUMPHUB-v1.0.3.apk`.
-- **v1.0.3 Force Close Fix**:
-  - Root cause: `requestAppPermissions()` was invoked synchronously inside `ComponentActivity.onCreate()` before window attachment, triggering `BadTokenException` / lifecycle crashes on Android 14/15 (HyperOS/MIUI).
-  - Fix: Moved runtime permission request inside Compose `LaunchedEffect(Unit)` with `try-catch`.
-  - Flow safety: Removed `.flowOn(Dispatchers.Default)` on `HomeViewModel.uiState` to prevent Room query flow cancellation collisions.
-  - Safe In-App Update: Replaced unsafe `asset.optString(key, null)` with null-safe check and wrapped auto-update check in `LaunchedEffect` with try-catch.
+- **GitHub Release**: Tag `v1.0.4` with `JUMPHUB-v1.0.4.apk`.
+- **v1.0.4 Force Close Elimination & Crash Recovery System**:
+  - **Eliminated Early Permission Interception**: Completely removed permission launcher from `MainActivity.onCreate()` and Compose `LaunchedEffect(Unit)`. HyperOS security blocks automated permission popups during startup, which triggered the silent OS crash notification. Permissions are now requested strictly in-context (on workout start or inside Settings).
+  - **Fixed Compose Context Wrapping**: Removed `LocalContext provides createConfigurationContext` from `ProvideAppLocale` so that Compose hierarchy always retains the real `MainActivity` Window token, preventing `WindowManager$BadTokenException`.
+  - **Integrated `CrashReportActivity`**: Registered a separate-process (`:crash`) recovery screen and global `Thread.setDefaultUncaughtExceptionHandler` so the app will never silently terminate to desktop.
+  - **Room Destructive Fallback**: Set `.fallbackToDestructiveMigration(true)` to guarantee SQLite schema discrepancies never throw fatal unhandled exceptions on startup.
+  - **FirebaseAuth Safe Initialization**: Hardened `FirebaseAuthServiceImpl` with `Throwable` guards and structured coroutine emission.
 
 ---
 
