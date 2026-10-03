@@ -69,6 +69,10 @@ fun SettingsScreen(
     onSetVoiceJumpInterval: (Int) -> Unit,
     onSetVoiceTimeInterval: (Int) -> Unit = {},
     onSetVoiceTargetMilestones: (Boolean) -> Unit,
+    onSetVoiceRoundSummaryEnabled: (Boolean) -> Unit = {},
+    onSetVoiceRoundSummaryJumps: (Boolean) -> Unit = {},
+    onSetVoiceRoundSummaryJpm: (Boolean) -> Unit = {},
+    onSetVoiceRoundSummaryStreak: (Boolean) -> Unit = {},
     onSetThemeMode: (String) -> Unit,
     onSetVoiceEnabled: (Boolean) -> Unit,
     onSetPhonePosition: (String) -> Unit,
@@ -286,6 +290,109 @@ fun SettingsScreen(
                             checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Round Summary Voice Section
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_round_summary_voice),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_round_summary_voice_desc),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = preferences.voiceRoundSummaryEnabled,
+                        onCheckedChange = onSetVoiceRoundSummaryEnabled,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
+
+                if (preferences.voiceRoundSummaryEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Speak jumps toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_speak_jumps),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Switch(
+                                checked = preferences.voiceRoundSummaryJumps,
+                                onCheckedChange = onSetVoiceRoundSummaryJumps,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            )
+                        }
+
+                        // Speak JPM toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_speak_jpm),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Switch(
+                                checked = preferences.voiceRoundSummaryJpm,
+                                onCheckedChange = onSetVoiceRoundSummaryJpm,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            )
+                        }
+
+                        // Speak streak toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_speak_streak),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Switch(
+                                checked = preferences.voiceRoundSummaryStreak,
+                                onCheckedChange = onSetVoiceRoundSummaryStreak,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }

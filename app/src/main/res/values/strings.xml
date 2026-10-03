@@ -107,6 +107,11 @@
     <string name="settings_voice_language">Workout Voice Language</string>
     <string name="settings_voice_enabled">Audio Cues Enabled</string>
     <string name="settings_voice_volume">Voice Volume</string>
+    <string name="settings_round_summary_voice">Round Summary Voice</string>
+    <string name="settings_round_summary_voice_desc">Speaks jumps, cadence, and rest time at the end of each round</string>
+    <string name="settings_speak_jumps">Speak Jumps</string>
+    <string name="settings_speak_jpm">Speak Cadence (JPM)</string>
+    <string name="settings_speak_streak">Speak Best Streak</string>
     <string name="settings_announcement_interval">Announcement Interval</string>
     <string name="settings_rhythm_beep">Rhythm Beep</string>
     <string name="settings_vibration">Vibration Feedback</string>
@@ -162,6 +167,11 @@
     <string name="account_guest_desc">All workout data is saved securely on this device. Sign in to back up and restore data across devices.</string>
     <string name="account_signed_in_title">Cloud Account</string>
     <string name="account_signed_in_desc">Logged in as %1$s. Sync is active.</string>
+    <string name="auth_error_no_accounts">No Google accounts found on this device.</string>
+    <string name="auth_error_cancelled">Sign-in was cancelled.</string>
+    <string name="auth_error_network">Network unavailable. Please check your internet connection.</string>
+    <string name="auth_error_token">Authentication token error. Please verify Google Play Services and try again.</string>
+    <string name="auth_error_generic">Sign-in failed. Please try again.</string>
 
     <!-- Profile & Greeting -->
     <string name="settings_section_profile">Athlete Profile</string>

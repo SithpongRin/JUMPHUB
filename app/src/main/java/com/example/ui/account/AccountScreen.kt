@@ -31,16 +31,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.sync.SyncReport
 import com.example.data.sync.SyncState
@@ -53,229 +59,248 @@ import java.util.Locale
 fun AccountScreen(
     currentUser: UserAccount?,
     syncReport: SyncReport,
+    isSigningIn: Boolean = false,
+    authErrorMessage: String? = null,
+    onClearAuthError: () -> Unit = {},
     onSyncNow: () -> Unit,
     onSignInGuest: () -> Unit,
-    onSignInGoogle: (String) -> Unit = {},
+    onSignInGoogle: () -> Unit,
     onSignOut: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isSyncing = syncReport.state == SyncState.SYNCING
     val isGuest = currentUser?.isAnonymous != false
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    val googleAccountPicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val accountName = result.data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
-        if (!accountName.isNullOrBlank()) {
-            onSignInGoogle(accountName)
+    LaunchedEffect(authErrorMessage) {
+        if (!authErrorMessage.isNullOrBlank()) {
+            snackbarHostState.showSnackbar(authErrorMessage)
+            onClearAuthError()
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .testTag("account_screen")
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .testTag("account_screen")
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            Text(
-                text = stringResource(R.string.account_title),
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Account Profile Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
+                IconButton(onClick = onBack) {
                     Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp)
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
                 Text(
-                    text = currentUser?.displayName ?: "Athlete",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = if (isGuest) stringResource(R.string.account_guest_title) else (currentUser?.email ?: "Synced User"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "UID: ${currentUser?.uid?.take(16) ?: "local"}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    text = stringResource(R.string.account_title),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        // Cloud Synchronization Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CloudSync,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
+            // Account Profile Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!currentUser?.photoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = currentUser?.photoUrl,
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     Text(
-                        text = stringResource(R.string.settings_sync_status),
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        text = currentUser?.displayName ?: "Athlete",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                val statusText = when (syncReport.state) {
-                    SyncState.SYNCING -> "Syncing with cloud..."
-                    SyncState.SUCCESS -> "All workouts backed up to cloud."
-                    SyncState.OFFLINE_SAVED -> "Offline-first mode: workouts saved locally on device."
-                    SyncState.FAILED -> "Sync paused. Retrying automatically when connected."
-                    else -> "Ready to synchronize."
-                }
-
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                if (syncReport.lastSyncTime > 0) {
-                    val dateFormatted = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(syncReport.lastSyncTime))
                     Text(
-                        text = stringResource(R.string.settings_last_sync, dateFormatted),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = if (isGuest) stringResource(R.string.account_guest_title) else (currentUser?.email ?: "Synced User"),
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "UID: ${currentUser?.uid?.take(16) ?: "local"}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Cloud Synchronization Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CloudSync,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(R.string.settings_sync_status),
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val statusText = when (syncReport.state) {
+                        SyncState.SYNCING -> "Syncing with cloud..."
+                        SyncState.SUCCESS -> "All workouts backed up to cloud."
+                        SyncState.OFFLINE_SAVED -> "Offline-first mode: workouts saved locally on device."
+                        SyncState.FAILED -> syncReport.errorMessage?.let { "Sync paused: $it" }
+                            ?: "Sync paused. Retrying automatically when connected."
+                        else -> "Ready to synchronize."
+                    }
+
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (syncReport.lastSyncTime > 0) {
+                        val dateFormatted = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(syncReport.lastSyncTime))
+                        Text(
+                            text = stringResource(R.string.settings_last_sync, dateFormatted),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = onSyncNow,
+                        enabled = !isSyncing,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        if (isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(text = stringResource(R.string.action_sync_now))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Auth action buttons
+            if (isGuest) {
                 Button(
-                    onClick = onSyncNow,
-                    enabled = !isSyncing,
+                    onClick = onSignInGoogle,
+                    enabled = !isSigningIn,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    if (isSyncing) {
+                    if (isSigningIn) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Signing in...")
                     } else {
                         Icon(
-                            imageVector = Icons.Default.Sync,
+                            imageVector = Icons.Default.AccountCircle,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.action_sign_in_google),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
                     }
-                    Text(text = stringResource(R.string.action_sync_now))
+                }
+            } else {
+                OutlinedButton(
+                    onClick = onSignOut,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_log_out),
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Auth action buttons
-        if (isGuest) {
-            Button(
-                onClick = {
-                    try {
-                        val intent = android.accounts.AccountManager.newChooseAccountIntent(
-                            null,
-                            null,
-                            arrayOf("com.google"),
-                            null,
-                            null,
-                            null,
-                            null
-                        )
-                        googleAccountPicker.launch(intent)
-                    } catch (_: Exception) {
-                        onSignInGuest()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.action_sign_in_google),
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-        } else {
-            OutlinedButton(
-                onClick = onSignOut,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.action_log_out),
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp)
+        )
     }
 }

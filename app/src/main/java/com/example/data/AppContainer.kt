@@ -14,11 +14,11 @@ import com.example.domain.repository.ProgressRepository
 import com.example.domain.repository.WorkoutRepository
 
 class AppContainer(context: Context) {
-    val database: AppDatabase = AppDatabase.getInstance(context)
-    val preferences: AppPreferencesDataStore = AppPreferencesDataStore(context)
-    val authRepository: AuthRepository = FirebaseAuthServiceImpl(context)
-    val workoutRepository: WorkoutRepository = WorkoutRepositoryImpl(database)
-    val planRepository: PlanRepository = PlanRepositoryImpl(database)
-    val progressRepository: ProgressRepository = ProgressRepositoryImpl(database)
-    val syncEngine: SyncEngine = SyncEngine(database, preferences, authRepository)
+    val database: AppDatabase by lazy { AppDatabase.getInstance(context) }
+    val preferences: AppPreferencesDataStore by lazy { AppPreferencesDataStore(context) }
+    val authRepository: AuthRepository by lazy { FirebaseAuthServiceImpl(context) }
+    val workoutRepository: WorkoutRepository by lazy { WorkoutRepositoryImpl(database) }
+    val planRepository: PlanRepository by lazy { PlanRepositoryImpl(database) }
+    val progressRepository: ProgressRepository by lazy { ProgressRepositoryImpl(database) }
+    val syncEngine: SyncEngine by lazy { SyncEngine(database, preferences, authRepository) }
 }

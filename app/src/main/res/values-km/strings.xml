@@ -107,6 +107,11 @@
     <string name="settings_voice_language">Workout Voice Language</string>
     <string name="settings_voice_enabled">Audio Cues Enabled</string>
     <string name="settings_voice_volume">Voice Volume</string>
+    <string name="settings_round_summary_voice">សំឡេងសង្ខេបជុំ</string>
+    <string name="settings_round_summary_voice_desc">បន្លឺចំនួនដង ល្បឿន និងពេលសម្រាកនៅចុងបញ្ចប់នៃជុំនីមួយៗ</string>
+    <string name="settings_speak_jumps">បន្លឺចំនួនលោត</string>
+    <string name="settings_speak_jpm">បន្លឺល្បឿនលោត (JPM)</string>
+    <string name="settings_speak_streak">បន្លឺចំនួនជាប់គ្នាល្អបំផុត</string>
     <string name="settings_announcement_interval">Announcement Interval</string>
     <string name="settings_rhythm_beep">Rhythm Beep</string>
     <string name="settings_vibration">Vibration Feedback</string>

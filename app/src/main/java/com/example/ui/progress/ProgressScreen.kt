@@ -3,6 +3,7 @@ package com.example.ui.progress
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -260,41 +261,49 @@ private fun CanvasActivityChart() {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Canvas(
+            Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
                     .testTag("activity_canvas_chart")
-            ) {
-                val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                val sampleValues = listOf(350f, 600f, 0f, 850f, 500f, 1200f, 750f)
-                val maxVal = 1400f
-                val barWidth = 24.dp.toPx()
-                val totalBars = days.size
-                val step = size.width / totalBars
+                    .drawWithCache {
+                        val sampleValues = listOf(350f, 600f, 0f, 850f, 500f, 1200f, 750f)
+                        val maxVal = 1400f
+                        val barWidth = 24.dp.toPx()
+                        val totalBars = 7
+                        val step = size.width / totalBars
+                        val cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                        val bgBarColor = surfaceVariant.copy(alpha = 0.5f)
 
-                for (i in 0 until totalBars) {
-                    val x = i * step + (step - barWidth) / 2
-                    val barHeight = (sampleValues[i] / maxVal) * (size.height - 30.dp.toPx())
-                    val y = size.height - 24.dp.toPx() - barHeight
+                        val bars = (0 until totalBars).map { i ->
+                            val x = i * step + (step - barWidth) / 2
+                            val barHeight = (sampleValues[i] / maxVal) * (size.height - 30.dp.toPx())
+                            val y = size.height - 24.dp.toPx() - barHeight
+                            Triple(x, y, barHeight)
+                        }
 
-                    drawRoundRect(
-                        color = surfaceVariant.copy(alpha = 0.5f),
-                        topLeft = Offset(x, 10.dp.toPx()),
-                        size = Size(barWidth, size.height - 34.dp.toPx()),
-                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
-                    )
+                        onDrawBehind {
+                            for (i in 0 until totalBars) {
+                                val (x, y, barHeight) = bars[i]
+                                drawRoundRect(
+                                    color = bgBarColor,
+                                    topLeft = Offset(x, 10.dp.toPx()),
+                                    size = Size(barWidth, size.height - 34.dp.toPx()),
+                                    cornerRadius = cornerRadius
+                                )
 
-                    if (barHeight > 0) {
-                        drawRoundRect(
-                            color = primaryColor,
-                            topLeft = Offset(x, y),
-                            size = Size(barWidth, barHeight),
-                            cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
-                        )
+                                if (barHeight > 0) {
+                                    drawRoundRect(
+                                        color = primaryColor,
+                                        topLeft = Offset(x, y),
+                                        size = Size(barWidth, barHeight),
+                                        cornerRadius = cornerRadius
+                                    )
+                                }
+                            }
+                        }
                     }
-                }
-            }
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

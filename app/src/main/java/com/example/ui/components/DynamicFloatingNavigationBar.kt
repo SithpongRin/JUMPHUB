@@ -80,9 +80,9 @@ fun DynamicFloatingNavigationBar(
                     )
                     .testTag("floating_navigation_bar"),
                 shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-                shadowElevation = 8.dp,
-                tonalElevation = 4.dp
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp,
+                tonalElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier

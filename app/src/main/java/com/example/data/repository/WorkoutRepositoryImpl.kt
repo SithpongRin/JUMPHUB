@@ -6,49 +6,52 @@ import com.example.data.local.room.SessionEntity
 import com.example.domain.model.RoundRecord
 import com.example.domain.model.WorkoutSession
 import com.example.domain.repository.WorkoutRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 class WorkoutRepositoryImpl(private val database: AppDatabase) : WorkoutRepository {
 
     override fun getAllSessions(): Flow<List<WorkoutSession>> {
         return database.sessionDao().getAllSessions().map { entities ->
             entities.map { it.toDomain() }
-        }
+        }.flowOn(Dispatchers.IO)
     }
 
     override fun getLatestSession(): Flow<WorkoutSession?> {
-        return database.sessionDao().getLatestSession().map { it?.toDomain() }
+        return database.sessionDao().getLatestSession().map { it?.toDomain() }.flowOn(Dispatchers.IO)
     }
 
     override fun getTotalLifetimeJumps(): Flow<Int?> {
-        return database.sessionDao().getTotalLifetimeJumps()
+        return database.sessionDao().getTotalLifetimeJumps().flowOn(Dispatchers.IO)
     }
 
     override fun getTotalLifetimeActiveSec(): Flow<Int?> {
-        return database.sessionDao().getTotalLifetimeActiveSec()
+        return database.sessionDao().getTotalLifetimeActiveSec().flowOn(Dispatchers.IO)
     }
 
     override fun getTotalSessionCount(): Flow<Int> {
-        return database.sessionDao().getTotalSessionCount()
+        return database.sessionDao().getTotalSessionCount().flowOn(Dispatchers.IO)
     }
 
     override fun getSessionById(uuid: String): Flow<WorkoutSession?> {
-        return database.sessionDao().getSessionByIdFlow(uuid).map { it?.toDomain() }
+        return database.sessionDao().getSessionByIdFlow(uuid).map { it?.toDomain() }.flowOn(Dispatchers.IO)
     }
 
-    override suspend fun saveSession(session: WorkoutSession, rounds: List<RoundRecord>) {
+    override suspend fun saveSession(session: WorkoutSession, rounds: List<RoundRecord>) = withContext(Dispatchers.IO) {
         val sessionEntity = session.toEntity()
         database.sessionDao().insertSession(sessionEntity)
         val roundEntities = rounds.map { it.toEntity() }
         database.roundRecordDao().insertRounds(roundEntities)
     }
 
-    override suspend fun getRoundsForSession(sessionId: String): List<RoundRecord> {
-        return database.roundRecordDao().getRoundsForSessionSync(sessionId).map { it.toDomain() }
+    override suspend fun getRoundsForSession(sessionId: String): List<RoundRecord> = withContext(Dispatchers.IO) {
+        database.roundRecordDao().getRoundsForSessionSync(sessionId).map { it.toDomain() }
     }
 
-    override suspend fun deleteSession(uuid: String) {
+    override suspend fun deleteSession(uuid: String) = withContext(Dispatchers.IO) {
         // 1. Record sync tombstone for cloud sync
         val now = System.currentTimeMillis()
         database.syncMetadataDao().setValue(
@@ -66,7 +69,7 @@ class WorkoutRepositoryImpl(private val database: AppDatabase) : WorkoutReposito
         recomputeStatsAndRecords()
     }
 
-    private suspend fun recomputeStatsAndRecords() {
+    private suspend fun recomputeStatsAndRecords() = withContext(Dispatchers.IO) {
         val remaining = database.sessionDao().getAllSessionsSync()
 
         // A. Clear existing aggregate stats and personal records
@@ -75,7 +78,7 @@ class WorkoutRepositoryImpl(private val database: AppDatabase) : WorkoutReposito
         database.statsDao().clearMonthlyStats()
         database.personalRecordDao().clearRecords()
 
-        if (remaining.isEmpty()) return
+        if (remaining.isEmpty()) return@withContext
 
         // B. Recompute daily stats
         val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)

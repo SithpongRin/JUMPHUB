@@ -25,6 +25,7 @@ enum class WorkoutPhase {
     FINISHED
 }
 
+@androidx.compose.runtime.Immutable
 data class WorkoutState(
     val phase: WorkoutPhase = WorkoutPhase.IDLE,
     val countdownSeconds: Int = 3,
@@ -42,10 +43,21 @@ data class WorkoutState(
     val restTotalSeconds: Int = 60,
     val currentStreak: Int = 0,
     val bestStreak: Int = 0,
+    val roundBestStreak: Int = 0,
     val currentCadenceJpm: Float = 0f,
     val targetJumps: Int = 500,
     val estimatedCalories: Float? = null,
-    val lastJumpTimestampMs: Long = 0L
+    val lastJumpTimestampMs: Long = 0L,
+    val lastCompletedRoundSummary: CompletedRoundData? = null
+)
+
+@androidx.compose.runtime.Immutable
+data class CompletedRoundData(
+    val round: Int,
+    val jumps: Int,
+    val jpm: Int,
+    val bestStreak: Int,
+    val restDurationSec: Int
 )
 
 class WorkoutStateMachine(
@@ -62,6 +74,7 @@ class WorkoutStateMachine(
     var voiceTimeIntervalMinutes: Int = 1
     var voiceTargetMilestonesEnabled: Boolean = true
     var voicePhaseCuesEnabled: Boolean = true
+    var roundSummaryConfig: RoundSummaryConfig = RoundSummaryConfig()
     var streakGapToleranceSec: Float = 2.0f
     var weightKg: Float? = null
     var met: Float = 11.5f
@@ -243,6 +256,7 @@ class WorkoutStateMachine(
             1
         }
         val bestStreak = maxOf(current.bestStreak, newStreak)
+        val roundBestStreak = maxOf(current.roundBestStreak, newStreak)
         val jpm = WorkoutMetricsCalculator.calculateJpm(newTotal, current.activeSeconds)
 
         _workoutState.value = current.copy(
@@ -252,6 +266,7 @@ class WorkoutStateMachine(
             correctedJumps = newCorrected,
             currentStreak = newStreak,
             bestStreak = bestStreak,
+            roundBestStreak = roundBestStreak,
             currentCadenceJpm = jpm,
             lastJumpTimestampMs = event.timestampMs
         )
@@ -306,13 +321,53 @@ class WorkoutStateMachine(
     }
 
     private fun enterRestPhase() {
-        _workoutState.value = _workoutState.value.copy(
+        val current = _workoutState.value
+        val roundJumps = current.roundJumps
+        val activeSec = current.roundActiveSeconds
+        val bestStreak = current.roundBestStreak
+        val restSec = current.restTotalSeconds
+        val roundNumber = current.currentRound
+
+        val roundJpm = if (activeSec > 0) ((roundJumps.toFloat() / activeSec) * 60f).toInt() else 0
+        val summaryData = CompletedRoundData(
+            round = roundNumber,
+            jumps = roundJumps,
+            jpm = roundJpm,
+            bestStreak = bestStreak,
+            restDurationSec = restSec
+        )
+
+        _workoutState.value = current.copy(
             phase = WorkoutPhase.RESTING,
-            restRemainingSeconds = _workoutState.value.restTotalSeconds
+            restRemainingSeconds = restSec,
+            lastCompletedRoundSummary = summaryData
         )
-        audioCueEngine.postCue(
-            AudioCueItem(AudioPriority.CRITICAL, textEn = "Rest ${_workoutState.value.restTotalSeconds} seconds", textKm = "សម្រាក ${_workoutState.value.restTotalSeconds} វិនាទី")
-        )
+
+        if (roundSummaryConfig.voiceRoundSummaryEnabled) {
+            val (enSummary, kmSummary) = VoiceSummaryBuilder.buildRoundSummary(
+                round = roundNumber,
+                roundJumps = roundJumps,
+                activeSecondsInRound = activeSec,
+                bestStreakInRound = bestStreak,
+                restDurationSec = restSec,
+                config = roundSummaryConfig
+            )
+            audioCueEngine.postCue(
+                AudioCueItem(
+                    priority = AudioPriority.CRITICAL,
+                    textEn = enSummary,
+                    textKm = kmSummary
+                )
+            )
+        } else {
+            audioCueEngine.postCue(
+                AudioCueItem(
+                    priority = AudioPriority.CRITICAL,
+                    textEn = "Rest $restSec seconds",
+                    textKm = "សម្រាក $restSec វិនាទី"
+                )
+            )
+        }
     }
 
     private fun enterNextRound() {
@@ -321,7 +376,9 @@ class WorkoutStateMachine(
             phase = WorkoutPhase.JUMPING,
             currentRound = nextRound,
             roundActiveSeconds = 0,
-            roundJumps = 0
+            roundJumps = 0,
+            roundBestStreak = 0,
+            lastCompletedRoundSummary = null
         )
         audioCueEngine.postCue(
             AudioCueItem(AudioPriority.CRITICAL, textEn = "Round $nextRound of ${_workoutState.value.totalRounds}, start", textKm = "ជុំទី $nextRound ចាប់ផ្តើម")
@@ -351,11 +408,17 @@ class WorkoutStateMachine(
         tickerJob?.cancel()
         countdownJob?.cancel()
         _workoutState.value = current.copy(phase = WorkoutPhase.FINISHED)
+
+        val (enSummary, kmSummary) = VoiceSummaryBuilder.buildFinalWorkoutSummary(
+            totalJumps = current.totalJumps,
+            activeSeconds = current.activeSeconds,
+            bestStreak = current.bestStreak
+        )
         audioCueEngine.postCue(
             AudioCueItem(
                 AudioPriority.CRITICAL,
-                textEn = "Workout complete! Total ${current.totalJumps} jumps",
-                textKm = "ការហាត់បានបញ្ចប់! សរុប ${current.totalJumps} ដង"
+                textEn = enSummary,
+                textKm = kmSummary
             )
         )
     }

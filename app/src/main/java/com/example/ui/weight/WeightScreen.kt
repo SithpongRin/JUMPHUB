@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -276,46 +277,52 @@ fun WeightScreen(
 @Composable
 private fun WeightTrendCanvas(metrics: List<BodyMetric>) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val outlineColor = MaterialTheme.colorScheme.outline
 
-    Canvas(
+    Spacer(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
             .testTag("weight_trend_canvas")
-    ) {
-        if (metrics.size < 2) return@Canvas
+            .drawWithCache {
+                if (metrics.size < 2) {
+                    onDrawBehind { }
+                } else {
+                    val weights = metrics.map { it.weightKg }
+                    val minWeight = (weights.minOrNull() ?: 50f) - 1f
+                    val maxWeight = (weights.maxOrNull() ?: 80f) + 1f
+                    val weightRange = (maxWeight - minWeight).coerceAtLeast(1f)
 
-        val weights = metrics.map { it.weightKg }
-        val minWeight = (weights.minOrNull() ?: 50f) - 1f
-        val maxWeight = (weights.maxOrNull() ?: 80f) + 1f
-        val weightRange = (maxWeight - minWeight).coerceAtLeast(1f)
+                    val stepX = size.width / (weights.size - 1)
+                    val points = weights.mapIndexed { index, w ->
+                        val x = index * stepX
+                        val y = size.height - ((w - minWeight) / weightRange * (size.height - 20.dp.toPx())) - 10.dp.toPx()
+                        Offset(x, y)
+                    }
+                    val strokeWidthPx = 3.dp.toPx()
+                    val circleRadiusPx = 4.dp.toPx()
 
-        val stepX = size.width / (weights.size - 1)
-        val points = weights.mapIndexed { index, w ->
-            val x = index * stepX
-            val y = size.height - ((w - minWeight) / weightRange * (size.height - 20.dp.toPx())) - 10.dp.toPx()
-            Offset(x, y)
-        }
+                    onDrawBehind {
+                        for (i in 0 until points.size - 1) {
+                            drawLine(
+                                color = primaryColor,
+                                start = points[i],
+                                end = points[i + 1],
+                                strokeWidth = strokeWidthPx,
+                                cap = StrokeCap.Round
+                            )
+                        }
 
-        for (i in 0 until points.size - 1) {
-            drawLine(
-                color = primaryColor,
-                start = points[i],
-                end = points[i + 1],
-                strokeWidth = 3.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-        }
-
-        points.forEach { point ->
-            drawCircle(
-                color = primaryColor,
-                radius = 4.dp.toPx(),
-                center = point
-            )
-        }
-    }
+                        points.forEach { point ->
+                            drawCircle(
+                                color = primaryColor,
+                                radius = circleRadiusPx,
+                                center = point
+                            )
+                        }
+                    }
+                }
+            }
+    )
 }
 
 @Composable

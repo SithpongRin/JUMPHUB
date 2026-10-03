@@ -55,7 +55,7 @@ class ProgressRepositoryImpl(private val database: AppDatabase) : ProgressReposi
         }
     }
 
-    override suspend fun logWeight(weightKg: Float, waistCm: Float?) {
+    override suspend fun logWeight(weightKg: Float, waistCm: Float?) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val now = System.currentTimeMillis()
         val metric = BodyMetricEntity(
             uuid = UUID.randomUUID().toString(),
@@ -68,7 +68,7 @@ class ProgressRepositoryImpl(private val database: AppDatabase) : ProgressReposi
         database.bodyMetricDao().insertMetric(metric)
     }
 
-    override suspend fun saveRecord(record: PersonalRecord) {
+    override suspend fun saveRecord(record: PersonalRecord) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val entity = PersonalRecordEntity(
             uuid = record.uuid,
             type = record.type.name,

@@ -93,4 +93,25 @@ class WorkoutStateMachineTest {
         stateMachine.resumeWorkout()
         assertEquals(WorkoutPhase.JUMPING, stateMachine.workoutState.value.phase)
     }
+
+    @Test
+    fun testRoundTransitionCreatesLastCompletedRoundSummary() = testScope.runTest {
+        stateMachine.startWorkout(targetRounds = 3, roundDurationSec = 5, restDurationSec = 10)
+        advanceTimeBy(3500L) // past countdown
+        assertEquals(WorkoutPhase.JUMPING, stateMachine.workoutState.value.phase)
+
+        // Simulate 10 jumps
+        stateMachine.adjustJumps(10)
+
+        // Advance 5 seconds past round duration
+        advanceTimeBy(5500L)
+
+        // Phase should now be RESTING and lastCompletedRoundSummary populated
+        assertEquals(WorkoutPhase.RESTING, stateMachine.workoutState.value.phase)
+        val summary = stateMachine.workoutState.value.lastCompletedRoundSummary
+        org.junit.Assert.assertNotNull(summary)
+        assertEquals(1, summary?.round)
+        assertEquals(10, summary?.jumps)
+        assertEquals(10, summary?.restDurationSec)
+    }
 }

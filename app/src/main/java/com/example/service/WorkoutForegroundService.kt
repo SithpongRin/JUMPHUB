@@ -27,7 +27,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Process
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class WorkoutForegroundService : Service(), SensorEventListener {
@@ -35,6 +39,8 @@ class WorkoutForegroundService : Service(), SensorEventListener {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
+    private var sensorThread: HandlerThread? = null
+    private var sensorHandler: Handler? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
     private lateinit var audioCueEngine: AudioCueEngine
@@ -91,6 +97,13 @@ class WorkoutForegroundService : Service(), SensorEventListener {
                     stateMachine.voiceTimeIntervalMinutes = prefs.voiceTimeIntervalMinutes
                     stateMachine.voiceTargetMilestonesEnabled = prefs.voiceTargetMilestonesEnabled
                     stateMachine.voicePhaseCuesEnabled = prefs.voicePhaseCuesEnabled
+                    stateMachine.roundSummaryConfig = com.example.domain.workout.RoundSummaryConfig(
+                        voiceRoundSummaryEnabled = prefs.voiceRoundSummaryEnabled,
+                        speakJumps = prefs.voiceRoundSummaryJumps,
+                        speakJpm = prefs.voiceRoundSummaryJpm,
+                        speakStreak = prefs.voiceRoundSummaryStreak,
+                        speakRestDuration = true
+                    )
                     stateMachine.streakGapToleranceSec = prefs.streakGapToleranceSec
                     stateMachine.weightKg = prefs.userWeightKg
                     stateMachine.met = prefs.metValue
@@ -99,10 +112,32 @@ class WorkoutForegroundService : Service(), SensorEventListener {
         }
 
         serviceScope.launch {
-            stateMachine.workoutState.collectLatest { state ->
-                _serviceState.value = state
-                updateNotification(state)
-            }
+            var lastUiEmitTime = 0L
+            var lastUiState: WorkoutState? = null
+
+            stateMachine.workoutState
+                .collect { state ->
+                    val now = System.currentTimeMillis()
+                    val phaseChanged = lastUiState?.phase != state.phase
+                    val isCountdown = state.phase == WorkoutPhase.COUNTDOWN
+                    val timeDelta = now - lastUiEmitTime
+
+                    if (phaseChanged || isCountdown || timeDelta >= 100L) {
+                        lastUiEmitTime = now
+                        lastUiState = state
+                        _serviceState.value = state
+                    } else {
+                        // Conflate rapid bursts during jumping to max ~10 Hz (100ms)
+                        kotlinx.coroutines.delay(100L - timeDelta)
+                        val latest = stateMachine.workoutState.value
+                        if (_serviceState.value != latest) {
+                            lastUiEmitTime = System.currentTimeMillis()
+                            lastUiState = latest
+                            _serviceState.value = latest
+                        }
+                    }
+                    updateNotification(state)
+                }
         }
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as? SensorManager
@@ -164,7 +199,16 @@ class WorkoutForegroundService : Service(), SensorEventListener {
         ServiceCompat.startForeground(this, NOTIFICATION_ID, initialNotification, foregroundType)
     }
 
+    private var lastNotifSec = -1
+    private var lastNotifPhase: WorkoutPhase? = null
+
     private fun updateNotification(state: WorkoutState) {
+        if (state.activeSeconds == lastNotifSec && state.phase == lastNotifPhase) {
+            return
+        }
+        lastNotifSec = state.activeSeconds
+        lastNotifPhase = state.phase
+
         val mins = state.activeSeconds / 60
         val secs = state.activeSeconds % 60
         val timeFormatted = String.format("%02d:%02d", mins, secs)
@@ -181,13 +225,22 @@ class WorkoutForegroundService : Service(), SensorEventListener {
     }
 
     private fun registerAccelerometer() {
+        if (sensorThread == null) {
+            val thread = HandlerThread("SensorBackgroundThread", Process.THREAD_PRIORITY_MORE_FAVORABLE)
+            thread.start()
+            sensorThread = thread
+            sensorHandler = Handler(thread.looper)
+        }
         accelerometer?.let {
-            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME, sensorHandler)
         }
     }
 
     private fun unregisterAccelerometer() {
         sensorManager?.unregisterListener(this)
+        sensorThread?.quitSafely()
+        sensorThread = null
+        sensorHandler = null
     }
 
     override fun onSensorChanged(event: SensorEvent?) {

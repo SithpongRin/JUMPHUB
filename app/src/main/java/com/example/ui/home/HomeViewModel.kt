@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import kotlinx.coroutines.Dispatchers
+
+@androidx.compose.runtime.Immutable
 data class HomeUiState(
     val currentUser: UserAccount? = null,
     val preferences: UserPreferences = UserPreferences(),
@@ -60,7 +63,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             totalActiveSec = lifetimeSec ?: 0,
             sessionCount = sessionCount
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     val uiState: StateFlow<HomeUiState> = combine(
         container.authRepository.currentUserFlow,
@@ -101,7 +104,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             isWeightDue = isWeightDue,
             syncReport = syncReport
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState()

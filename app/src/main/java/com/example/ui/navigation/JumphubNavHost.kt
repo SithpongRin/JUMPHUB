@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -52,9 +53,9 @@ import java.util.UUID
 @Composable
 fun JumphubApp(container: AppContainer) {
     val context = LocalContext.current
-    val preferences by container.preferences.userPreferencesFlow.collectAsState(initial = com.example.data.local.datastore.UserPreferences())
-    val currentUser by container.authRepository.currentUserFlow.collectAsState(initial = null)
-    val syncReport by container.syncEngine.syncReport.collectAsState(initial = com.example.data.sync.SyncReport())
+    val preferences by container.preferences.userPreferencesFlow.collectAsStateWithLifecycle(initialValue = com.example.data.local.datastore.UserPreferences())
+    val currentUser by container.authRepository.currentUserFlow.collectAsStateWithLifecycle(initialValue = null)
+    val syncReport by container.syncEngine.syncReport.collectAsStateWithLifecycle(initialValue = com.example.data.sync.SyncReport())
 
     val isDarkTheme = when (preferences.themeMode) {
         "dark" -> true
@@ -100,7 +101,12 @@ fun JumphubApp(container: AppContainer) {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         composable(Screen.Onboarding.route) {
+                            var isOnboardingSigningIn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+                            var onboardingAuthError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+
                             OnboardingScreen(
+                                isSigningIn = isOnboardingSigningIn,
+                                errorMessage = onboardingAuthError,
                                 onCompleteOnboarding = { name, age, heightCm, weightKg ->
                                     coroutineScope.launch {
                                         container.preferences.setProfile(name, age, heightCm, weightKg)
@@ -112,15 +118,27 @@ fun JumphubApp(container: AppContainer) {
                                         }
                                     }
                                 },
-                                onSignInWithGoogle = { email, name, age, heightCm, weightKg ->
+                                onSignInWithGoogle = { name, age, heightCm, weightKg ->
                                     coroutineScope.launch {
-                                        container.preferences.setProfile(name, age, heightCm, weightKg)
-                                        container.preferences.setOnboardingCompleted(true)
-                                        container.preferences.setParqAcknowledged(true)
-                                        container.authRepository.signInWithGoogleAccount(email, name.ifBlank { email.substringBefore("@") })
-                                        navController.navigate(Screen.Home.route) {
-                                            popUpTo(Screen.Onboarding.route) { inclusive = true }
-                                        }
+                                        isOnboardingSigningIn = true
+                                        onboardingAuthError = null
+                                        val result = container.authRepository.signInWithGoogleCreds(context)
+                                        isOnboardingSigningIn = false
+                                        result.fold(
+                                            onSuccess = { signedInUser ->
+                                                val finalName = if (name.isNotBlank() && name != "Athlete") name else (signedInUser.displayName ?: name)
+                                                container.preferences.setProfile(finalName, age, heightCm, weightKg)
+                                                container.preferences.setOnboardingCompleted(true)
+                                                container.preferences.setParqAcknowledged(true)
+                                                container.syncEngine.syncNow()
+                                                navController.navigate(Screen.Home.route) {
+                                                    popUpTo(Screen.Onboarding.route) { inclusive = true }
+                                                }
+                                            },
+                                            onFailure = { error ->
+                                                onboardingAuthError = error.message ?: "Sign-in failed."
+                                            }
+                                        )
                                     }
                                 }
                             )
@@ -128,7 +146,7 @@ fun JumphubApp(container: AppContainer) {
 
                         composable(Screen.Home.route) {
                             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.provideFactory(container))
-                            val homeUiState by homeViewModel.uiState.collectAsState()
+                            val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
                             HomeScreen(
                                 uiState = homeUiState,
@@ -161,9 +179,9 @@ fun JumphubApp(container: AppContainer) {
 
                         composable(Screen.Plans.route) {
                             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.provideFactory(container))
-                            val homeUiState by homeViewModel.uiState.collectAsState()
-                            val plans by container.planRepository.getAvailablePlans().collectAsState(initial = emptyList())
-                            val activePlan by container.planRepository.getActivePlan().collectAsState(initial = null)
+                            val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+                            val plans by container.planRepository.getAvailablePlans().collectAsStateWithLifecycle(initialValue = emptyList())
+                            val activePlan by container.planRepository.getActivePlan().collectAsStateWithLifecycle(initialValue = null)
 
                             val selectedDays = preferences.getTrainingDaysSet()
                             val trainingStreak = Pair(homeUiState.currentStreakDays, homeUiState.longestStreakDays)
@@ -237,8 +255,8 @@ fun JumphubApp(container: AppContainer) {
                         }
 
                         composable(Screen.Progress.route) {
-                            val sessions by container.workoutRepository.getAllSessions().collectAsState(initial = emptyList())
-                            val dailyStats by container.progressRepository.getDailyStats().collectAsState(initial = emptyList())
+                            val sessions by container.workoutRepository.getAllSessions().collectAsStateWithLifecycle(initialValue = emptyList())
+                            val dailyStats by container.progressRepository.getDailyStats().collectAsStateWithLifecycle(initialValue = emptyList())
 
                             ProgressScreen(
                                 sessions = sessions,
@@ -251,7 +269,7 @@ fun JumphubApp(container: AppContainer) {
                         }
 
                         composable(Screen.Records.route) {
-                            val records by container.progressRepository.getPersonalRecords().collectAsState(initial = emptyList())
+                            val records by container.progressRepository.getPersonalRecords().collectAsStateWithLifecycle(initialValue = emptyList())
 
                             RecordsScreen(
                                 records = records,
@@ -279,6 +297,18 @@ fun JumphubApp(container: AppContainer) {
                                 },
                                 onSetVoiceTargetMilestones = { enabled ->
                                     coroutineScope.launch { container.preferences.setVoiceTargetMilestonesEnabled(enabled) }
+                                },
+                                onSetVoiceRoundSummaryEnabled = { enabled ->
+                                    coroutineScope.launch { container.preferences.setVoiceRoundSummaryEnabled(enabled) }
+                                },
+                                onSetVoiceRoundSummaryJumps = { enabled ->
+                                    coroutineScope.launch { container.preferences.setVoiceRoundSummaryJumps(enabled) }
+                                },
+                                onSetVoiceRoundSummaryJpm = { enabled ->
+                                    coroutineScope.launch { container.preferences.setVoiceRoundSummaryJpm(enabled) }
+                                },
+                                onSetVoiceRoundSummaryStreak = { enabled ->
+                                    coroutineScope.launch { container.preferences.setVoiceRoundSummaryStreak(enabled) }
                                 },
                                 onSetThemeMode = { mode ->
                                     coroutineScope.launch { container.preferences.setThemeMode(mode) }
@@ -312,19 +342,36 @@ fun JumphubApp(container: AppContainer) {
                         }
 
                         composable(Screen.Account.route) {
+                            var isAccountSigningIn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+                            var accountAuthError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+
                             AccountScreen(
                                 currentUser = currentUser,
                                 syncReport = syncReport,
+                                isSigningIn = isAccountSigningIn,
+                                authErrorMessage = accountAuthError,
+                                onClearAuthError = { accountAuthError = null },
                                 onSyncNow = {
                                     coroutineScope.launch { container.syncEngine.syncNow() }
                                 },
                                 onSignInGuest = {
                                     coroutineScope.launch { container.authRepository.signInAsGuest() }
                                 },
-                                onSignInGoogle = { email ->
+                                onSignInGoogle = {
                                     coroutineScope.launch {
-                                        container.authRepository.signInWithGoogleAccount(email, email.substringBefore("@"))
-                                        container.syncEngine.syncNow()
+                                        isAccountSigningIn = true
+                                        accountAuthError = null
+                                        val result = container.authRepository.signInWithGoogleCreds(context)
+                                        isAccountSigningIn = false
+                                        result.fold(
+                                            onSuccess = {
+                                                // After sign-in, start SyncEngine for users/{uid}/sessions
+                                                container.syncEngine.syncNow()
+                                            },
+                                            onFailure = { error ->
+                                                accountAuthError = error.message ?: "Sign-in failed."
+                                            }
+                                        )
                                     }
                                 },
                                 onSignOut = {
@@ -335,7 +382,7 @@ fun JumphubApp(container: AppContainer) {
                         }
 
                         composable(Screen.Weight.route) {
-                            val metrics by container.progressRepository.getAllMetrics().collectAsState(initial = emptyList())
+                            val metrics by container.progressRepository.getAllMetrics().collectAsStateWithLifecycle(initialValue = emptyList())
 
                             WeightScreen(
                                 metrics = metrics,
@@ -354,7 +401,7 @@ fun JumphubApp(container: AppContainer) {
                             arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-                            val session by container.workoutRepository.getSessionById(sessionId).collectAsState(initial = null)
+                            val session by container.workoutRepository.getSessionById(sessionId).collectAsStateWithLifecycle(initialValue = null)
                             var rounds by remember { mutableStateOf<List<com.example.domain.model.RoundRecord>>(emptyList()) }
 
                             androidx.compose.runtime.LaunchedEffect(sessionId) {

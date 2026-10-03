@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "jumphub_preferences")
@@ -23,6 +25,10 @@ data class UserPreferences(
     val voiceTimeIntervalMinutes: Int = 1,
     val voiceTargetMilestonesEnabled: Boolean = true,
     val voicePhaseCuesEnabled: Boolean = true,
+    val voiceRoundSummaryEnabled: Boolean = true,
+    val voiceRoundSummaryJumps: Boolean = true,
+    val voiceRoundSummaryJpm: Boolean = true,
+    val voiceRoundSummaryStreak: Boolean = true,
     val announcementInterval: Int = 10,
     val rhythmBeep: Boolean = false,
     val vibration: Boolean = true,
@@ -89,6 +95,10 @@ class AppPreferencesDataStore(private val context: Context) {
         val VOICE_TIME_INTERVAL_MINUTES = intPreferencesKey("voice_time_interval_minutes")
         val VOICE_TARGET_MILESTONES_ENABLED = booleanPreferencesKey("voice_target_milestones_enabled")
         val VOICE_PHASE_CUES_ENABLED = booleanPreferencesKey("voice_phase_cues_enabled")
+        val VOICE_ROUND_SUMMARY_ENABLED = booleanPreferencesKey("voice_round_summary_enabled")
+        val VOICE_ROUND_SUMMARY_JUMPS = booleanPreferencesKey("voice_round_summary_jumps")
+        val VOICE_ROUND_SUMMARY_JPM = booleanPreferencesKey("voice_round_summary_jpm")
+        val VOICE_ROUND_SUMMARY_STREAK = booleanPreferencesKey("voice_round_summary_streak")
         val ANNOUNCEMENT_INTERVAL = intPreferencesKey("announcement_interval")
         val RHYTHM_BEEP = booleanPreferencesKey("rhythm_beep")
         val VIBRATION = booleanPreferencesKey("vibration")
@@ -134,6 +144,10 @@ class AppPreferencesDataStore(private val context: Context) {
             voiceTimeIntervalMinutes = preferences[Keys.VOICE_TIME_INTERVAL_MINUTES] ?: 1,
             voiceTargetMilestonesEnabled = preferences[Keys.VOICE_TARGET_MILESTONES_ENABLED] ?: true,
             voicePhaseCuesEnabled = preferences[Keys.VOICE_PHASE_CUES_ENABLED] ?: true,
+            voiceRoundSummaryEnabled = preferences[Keys.VOICE_ROUND_SUMMARY_ENABLED] ?: true,
+            voiceRoundSummaryJumps = preferences[Keys.VOICE_ROUND_SUMMARY_JUMPS] ?: true,
+            voiceRoundSummaryJpm = preferences[Keys.VOICE_ROUND_SUMMARY_JPM] ?: true,
+            voiceRoundSummaryStreak = preferences[Keys.VOICE_ROUND_SUMMARY_STREAK] ?: true,
             announcementInterval = preferences[Keys.ANNOUNCEMENT_INTERVAL] ?: 10,
             rhythmBeep = preferences[Keys.RHYTHM_BEEP] ?: false,
             vibration = preferences[Keys.VIBRATION] ?: true,
@@ -160,7 +174,7 @@ class AppPreferencesDataStore(private val context: Context) {
             weeklyWeightCheckinHour = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_HOUR] ?: 8,
             weeklyWeightCheckinMinute = preferences[Keys.WEEKLY_WEIGHT_CHECKIN_MINUTE] ?: 0
         )
-    }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun setUiLanguage(lang: String) {
         context.dataStore.edit { it[Keys.UI_LANGUAGE] = lang }
@@ -200,6 +214,22 @@ class AppPreferencesDataStore(private val context: Context) {
 
     suspend fun setVoicePhaseCuesEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.VOICE_PHASE_CUES_ENABLED] = enabled }
+    }
+
+    suspend fun setVoiceRoundSummaryEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.VOICE_ROUND_SUMMARY_ENABLED] = enabled }
+    }
+
+    suspend fun setVoiceRoundSummaryJumps(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.VOICE_ROUND_SUMMARY_JUMPS] = enabled }
+    }
+
+    suspend fun setVoiceRoundSummaryJpm(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.VOICE_ROUND_SUMMARY_JPM] = enabled }
+    }
+
+    suspend fun setVoiceRoundSummaryStreak(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.VOICE_ROUND_SUMMARY_STREAK] = enabled }
     }
 
     suspend fun setPhonePosition(pos: String) {

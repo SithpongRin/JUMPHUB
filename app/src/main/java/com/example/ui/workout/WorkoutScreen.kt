@@ -61,13 +61,15 @@ import com.example.domain.workout.WorkoutPhase
 import com.example.domain.workout.WorkoutState
 import com.example.service.WorkoutForegroundService
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @Composable
 fun WorkoutScreen(
     onFinishWorkout: (WorkoutState) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val workoutState by WorkoutForegroundService.serviceState.collectAsState()
+    val workoutState by WorkoutForegroundService.serviceState.collectAsStateWithLifecycle()
 
     // Keep screen on during active workout
     DisposableEffect(Unit) {
@@ -95,21 +97,43 @@ fun WorkoutScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // Top Phase & Round Status
-        TopPhaseBanner(workoutState = workoutState)
+        TopPhaseBanner(
+            phase = workoutState.phase,
+            currentRound = workoutState.currentRound,
+            totalRounds = workoutState.totalRounds,
+            restRemainingSeconds = workoutState.restRemainingSeconds,
+            activeSeconds = workoutState.activeSeconds
+        )
 
         // Center: Huge Countdown OR Huge Jump Counter + Streaks
         if (workoutState.phase == WorkoutPhase.COUNTDOWN) {
             CountdownDisplay(seconds = workoutState.countdownSeconds)
         } else {
-            CenterJumpCounter(workoutState = workoutState)
+            CenterJumpCounter(
+                phase = workoutState.phase,
+                totalRounds = workoutState.totalRounds,
+                currentRound = workoutState.currentRound,
+                totalJumps = workoutState.totalJumps,
+                roundJumps = workoutState.roundJumps,
+                currentStreak = workoutState.currentStreak,
+                bestStreak = workoutState.bestStreak,
+                lastCompletedRoundSummary = workoutState.lastCompletedRoundSummary
+            )
         }
 
         // Live Secondary Metrics Grid
-        LiveMetricsBar(workoutState = workoutState)
+        LiveMetricsBar(
+            currentCadenceJpm = workoutState.currentCadenceJpm,
+            activeSeconds = workoutState.activeSeconds,
+            elapsedSeconds = workoutState.elapsedSeconds,
+            roundTargetSeconds = workoutState.roundTargetSeconds,
+            targetJumps = workoutState.targetJumps,
+            estimatedCalories = workoutState.estimatedCalories
+        )
 
         // Hands-Free Bottom Controls (Pause, Stop, Manual +/- Correction)
         BottomWorkoutControls(
-            workoutState = workoutState,
+            isPaused = workoutState.phase == WorkoutPhase.PAUSED,
             onPause = { sendServiceAction(context, WorkoutForegroundService.ACTION_PAUSE) },
             onResume = { sendServiceAction(context, WorkoutForegroundService.ACTION_RESUME) },
             onStop = {
@@ -135,12 +159,18 @@ private fun sendServiceAction(context: Context, action: String) {
 }
 
 @Composable
-private fun TopPhaseBanner(workoutState: WorkoutState) {
+private fun TopPhaseBanner(
+    phase: WorkoutPhase,
+    currentRound: Int,
+    totalRounds: Int,
+    restRemainingSeconds: Int,
+    activeSeconds: Int
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(top = 16.dp)
     ) {
-        val (bannerText, containerColor, textColor) = when (workoutState.phase) {
+        val (bannerText, containerColor, textColor) = when (phase) {
             WorkoutPhase.COUNTDOWN -> Triple(
                 "PREPARE",
                 MaterialTheme.colorScheme.secondaryContainer,
@@ -152,7 +182,7 @@ private fun TopPhaseBanner(workoutState: WorkoutState) {
                 MaterialTheme.colorScheme.onPrimaryContainer
             )
             WorkoutPhase.RESTING -> Triple(
-                "REST · ${workoutState.restRemainingSeconds}s",
+                "REST · ${restRemainingSeconds}s",
                 MaterialTheme.colorScheme.tertiaryContainer,
                 MaterialTheme.colorScheme.onTertiaryContainer
             )
@@ -167,7 +197,7 @@ private fun TopPhaseBanner(workoutState: WorkoutState) {
                 MaterialTheme.colorScheme.onPrimaryContainer
             )
             else -> Triple(
-                "ROUND ${workoutState.currentRound} OF ${workoutState.totalRounds}",
+                "ROUND $currentRound OF $totalRounds",
                 MaterialTheme.colorScheme.primaryContainer,
                 MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -187,17 +217,22 @@ private fun TopPhaseBanner(workoutState: WorkoutState) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        val mins = workoutState.activeSeconds / 60
-        val secs = workoutState.activeSeconds % 60
-        Text(
-            text = String.format("%02d:%02d", mins, secs),
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp
-            ),
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        WorkoutTimerText(activeSeconds = activeSeconds)
     }
+}
+
+@Composable
+private fun WorkoutTimerText(activeSeconds: Int) {
+    val mins = activeSeconds / 60
+    val secs = activeSeconds % 60
+    Text(
+        text = String.format("%02d:%02d", mins, secs),
+        style = MaterialTheme.typography.headlineMedium.copy(
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp
+        ),
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable
@@ -231,68 +266,165 @@ private fun CountdownDisplay(seconds: Int) {
 }
 
 @Composable
-private fun CenterJumpCounter(workoutState: WorkoutState) {
+private fun CenterJumpCounter(
+    phase: WorkoutPhase,
+    totalRounds: Int,
+    currentRound: Int,
+    totalJumps: Int,
+    roundJumps: Int,
+    currentStreak: Int,
+    bestStreak: Int,
+    lastCompletedRoundSummary: com.example.domain.workout.CompletedRoundData?
+) {
+    val isMultiRound = totalRounds > 1
+    val displayJumps = if (isMultiRound) roundJumps else totalJumps
+    val jumpLabel = if (isMultiRound) "ROUND $currentRound JUMPS" else stringResource(R.string.unit_jumps).uppercase()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(vertical = 12.dp)
     ) {
-        val isMultiRound = workoutState.totalRounds > 1
-        val displayJumps = if (isMultiRound) workoutState.roundJumps else workoutState.totalJumps
-        val jumpLabel = if (isMultiRound) "ROUND ${workoutState.currentRound} JUMPS" else stringResource(R.string.unit_jumps).uppercase()
+        BigJumpCounter(displayJumps = displayJumps, jumpLabel = jumpLabel)
 
-        Text(
-            text = "$displayJumps",
-            style = MaterialTheme.typography.displayLarge.copy(
-                fontSize = 104.sp,
-                lineHeight = 104.sp,
-                fontWeight = FontWeight.Black
-            ),
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = jumpLabel,
-            style = MaterialTheme.typography.titleMedium.copy(
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        // On-screen Round Summary Card when resting
+        if (phase == WorkoutPhase.RESTING && lastCompletedRoundSummary != null) {
+            RoundSummaryCard(summary = lastCompletedRoundSummary)
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Jump Streak & Total Jumps Pill
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        val pillText = if (isMultiRound) {
+            "Total: $totalJumps · Streak: $currentStreak"
+        } else {
+            "Streak: $currentStreak (Best: $bestStreak)"
+        }
+        StreakPill(pillText = pillText)
+    }
+}
+
+@Composable
+private fun BigJumpCounter(displayJumps: Int, jumpLabel: String) {
+    Text(
+        text = "$displayJumps",
+        style = MaterialTheme.typography.displayLarge.copy(
+            fontSize = 104.sp,
+            lineHeight = 104.sp,
+            fontWeight = FontWeight.Black
+        ),
+        color = MaterialTheme.colorScheme.primary
+    )
+    Text(
+        text = jumpLabel,
+        style = MaterialTheme.typography.titleMedium.copy(
+            letterSpacing = 2.sp,
+            fontWeight = FontWeight.Bold
+        ),
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun RoundSummaryCard(summary: com.example.domain.workout.CompletedRoundData) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = "Round ${summary.round} Summary",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Icon(
-                    imageVector = Icons.Default.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                val pillText = if (isMultiRound) {
-                    "Total: ${workoutState.totalJumps} · Streak: ${workoutState.currentStreak}"
-                } else {
-                    "Streak: ${workoutState.currentStreak} (Best: ${workoutState.bestStreak})"
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${summary.jumps}",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Text(
+                        text = "Jumps",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    )
                 }
-                Text(
-                    text = pillText,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${summary.jpm}",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Text(
+                        text = "JPM",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+                if (summary.bestStreak > 0) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${summary.bestStreak}",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Text(
+                            text = "Best Streak",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun LiveMetricsBar(workoutState: WorkoutState) {
+private fun StreakPill(pillText: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocalFireDepartment,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = pillText,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun LiveMetricsBar(
+    currentCadenceJpm: Float,
+    activeSeconds: Int,
+    elapsedSeconds: Int,
+    roundTargetSeconds: Int,
+    targetJumps: Int,
+    estimatedCalories: Float?
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -304,11 +436,11 @@ private fun LiveMetricsBar(workoutState: WorkoutState) {
             LiveMetricBox(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Speed,
-                value = "${workoutState.currentCadenceJpm.toInt()}",
+                value = "${currentCadenceJpm.toInt()}",
                 label = "JPM"
             )
-            val mins = workoutState.activeSeconds / 60
-            val secs = workoutState.activeSeconds % 60
+            val mins = activeSeconds / 60
+            val secs = activeSeconds % 60
             LiveMetricBox(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Timer,
@@ -318,7 +450,7 @@ private fun LiveMetricsBar(workoutState: WorkoutState) {
             LiveMetricBox(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Timer,
-                value = "${workoutState.elapsedSeconds / 60}m ${workoutState.elapsedSeconds % 60}s",
+                value = "${elapsedSeconds / 60}m ${elapsedSeconds % 60}s",
                 label = "Total Elapsed"
             )
         }
@@ -329,13 +461,13 @@ private fun LiveMetricsBar(workoutState: WorkoutState) {
             LiveMetricBox(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Speed,
-                value = if (workoutState.roundTargetSeconds > 0) "${workoutState.roundTargetSeconds}s" else "${workoutState.targetJumps} jumps",
+                value = if (roundTargetSeconds > 0) "${roundTargetSeconds}s" else "$targetJumps jumps",
                 label = "Round Target"
             )
             LiveMetricBox(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.LocalFireDepartment,
-                value = workoutState.estimatedCalories?.let { "${it.toInt()} kcal" } ?: "Unavailable",
+                value = estimatedCalories?.let { "${it.toInt()} kcal" } ?: "Unavailable",
                 label = "Calories (Est)"
             )
         }
@@ -382,7 +514,7 @@ private fun LiveMetricBox(
 
 @Composable
 private fun BottomWorkoutControls(
-    workoutState: WorkoutState,
+    isPaused: Boolean,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStop: () -> Unit,
@@ -438,7 +570,6 @@ private fun BottomWorkoutControls(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val isPaused = workoutState.phase == WorkoutPhase.PAUSED
             Button(
                 onClick = { if (isPaused) onResume() else onPause() },
                 modifier = Modifier

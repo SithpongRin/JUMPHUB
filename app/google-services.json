@@ -12,7 +12,20 @@
           "package_name": "com.aistudio.jumphub.trvkmq"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "108597728382-v6gkhn2bn5pndkav00hcleqga69bn7dg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.jumphub.trvkmq",
+            "certificate_hash": "cf3ef3c60af7f3415b04c4d281b0f1d1948490ea"
+          }
+        },
+        {
+          "client_id": "108597728382-jq80ggc09k9s8fmvnefotft7mannvnnq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB46tjGCGf2jo7PN6t6btIWAdTzXoCGCCA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "108597728382-jq80ggc09k9s8fmvnefotft7mannvnnq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

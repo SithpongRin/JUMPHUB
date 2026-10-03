@@ -161,4 +161,50 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
   - Eliminated heavy `animateDpAsState` height and width interpolations on navigation items in `DynamicFloatingNavigationBar`.
   - Replaced manual Canvas blur/glow multi-pass rendering with hardware-accelerated `shadow(elevation = 8.dp)`.
 
+---
+
+## 14. v1.0.6 Release Notes & Architecture Fixes
+
+### A. True Google Sign-In with Credential Manager & Firebase
+- **Credential Manager Integration**: Replaced legacy `AccountManager.newChooseAccountIntent` with modern `androidx.credentials.CredentialManager` and Google ID token library (`com.google.android.libraries.identity.googleid.GetGoogleIdOption`).
+- **Real Firebase Authentication**: Retrieves Google ID Token from Credential Manager and signs into Firebase via `FirebaseAuth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))`.
+- **Dynamic Web Client ID**: Automatically resolves `default_web_client_id` from resources provided by `google-services.json`.
+- **User Profile Display**: Signed-in user's display name, email, and Google profile picture are dynamically displayed on the Account screen with a 1-tap Sign Out button.
+- **Offline & Local-First Resilience**: Seamless fallback to local guest session if unauthenticated or offline. Cloud sync (`SyncEngine`) starts automatically upon successful authentication for `users/{uid}/sessions`, adhering to deletion tombstone rules.
+- **Firestore Security Rules**: Restricted user sessions strictly to `users/{uid}/**`.
+
+### B. Voice Summary at Round End & Workout Finish
+- **Merged Round Voice Summary**: When a round finishes (start of `RESTING`), the app announces a complete round summary (e.g. *"Round 2 complete. 120 jumps. 96 jumps per minute. Rest 30 seconds."*) using `AudioPriority.CRITICAL`. Merged with rest duration into a single utterance to avoid audio queue drops or collisions.
+- **Divide-by-Zero Safety**: `VoiceSummaryBuilder` guards against active round durations of 0s, safely defaulting JPM to 0.
+- **Bilingual TTS Support**: Full string resources and text generation for both English (`en`) and Khmer (`km`) voice languages.
+- **Settings Customization**: Added toggles for Round summary voice (on/off) and specific metrics to speak (jumps, JPM, streak).
+- **On-Screen Round Summary Card**: Added a visual card in `WorkoutScreen` during `RESTING` displaying completed round metrics (jumps, JPM, best streak).
+- **Final Workout Summary**: Speaks a complete session summary on `FINISHED` phase (total jumps, average JPM, total elapsed time).
+
+### C. Lag Elimination & Smoothness Overhaul
+- **50 Hz Sensor Offloading**: Accelerometer listener in `WorkoutForegroundService` is registered on a dedicated background `HandlerThread`, moving all 50 Hz callbacks and jump peak processing completely off the main UI thread.
+- **Conflated UI State Updates**: Throttled workout UI state emissions to at most 10 Hz (~100ms) with StateFlow conflation, preventing rapid sensor events from triggering frequent Compose recompositions.
+- **Throttled Notifications**: Android `NotificationManager.notify()` IPC calls are throttled to update at most once per second or on phase transitions, eliminating system server IPC stutter.
+- **Granular Compose Recomposition**:
+  - Annotated `WorkoutState` and `CompletedRoundData` with `@Immutable`.
+  - Refactored `WorkoutScreen` so `BottomWorkoutControls` depends only on `isPaused: Boolean` (never recomposes on jumps or clock ticks).
+  - Isolated the big jump counter into `BigJumpCounter` so only the counter text recomposes during jumps.
+  - Migrated state collection throughout navigation and screens to `collectAsStateWithLifecycle()`.
+- **Hardware-Accelerated Canvas Caching**:
+  - `WeightScreen`: Replaced per-frame Canvas allocations and recalculations with `Modifier.drawWithCache`.
+  - `ProgressScreen`: Applied `drawWithCache` to the daily activity volume bar chart.
+  - `DynamicFloatingNavigationBar`: Made surface color opaque and reduced elevation, eliminating offscreen alpha-shadow blending passes.
+- **Asynchronous Data Layer**:
+  - `AppPreferencesDataStore`: Added `.flowOn(Dispatchers.IO)`.
+  - `WorkoutRepositoryImpl` & `ProgressRepositoryImpl`: Database queries, inserts, and statistical calculations wrapped in `withContext(Dispatchers.IO)`.
+  - `HomeViewModel`: Offloaded combined flow processing and streak calculations to `Dispatchers.Default`.
+- **Cold Startup Latency Optimization**:
+  - Converted `AppContainer` repository and engine properties to `by lazy`, deferring Firebase and database initialization until accessed.
+  - Added Baseline Profile (`app/src/main/baseline-prof.txt`) for ahead-of-time (AOT) compilation of critical startup and workout execution paths.
+- **Production R8 Minification & Resource Shrinking**:
+  - Enabled `isMinifyEnabled = true` and `isShrinkResources = true` in `app/build.gradle.kts`.
+  - Configured comprehensive ProGuard keep rules (`app/proguard-rules.pro`) protecting Room, Firebase, Credential Manager, Google ID, Moshi, and Domain models.
+  - Automated signing fallback to `debug.keystore` for reproducible local release builds.
+
+
 

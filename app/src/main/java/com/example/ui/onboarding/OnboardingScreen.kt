@@ -50,7 +50,9 @@ import com.example.R
 @Composable
 fun OnboardingScreen(
     onCompleteOnboarding: (name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit,
-    onSignInWithGoogle: (email: String, name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit = { _, n, a, h, w -> onCompleteOnboarding(n, a, h, w) },
+    onSignInWithGoogle: (name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit = { n, a, h, w -> onCompleteOnboarding(n, a, h, w) },
+    isSigningIn: Boolean = false,
+    errorMessage: String? = null,
     modifier: Modifier = Modifier
 ) {
     var q1Heart by remember { mutableStateOf(false) }
@@ -63,22 +65,6 @@ fun OnboardingScreen(
     var ageInput by remember { mutableStateOf("28") }
     var heightInput by remember { mutableStateOf("175") }
     var weightInput by remember { mutableStateOf("70") }
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val googleAccountPicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val accountName = result.data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
-        val name = nameInput.trim().ifBlank { "Athlete" }
-        val age = ageInput.toIntOrNull() ?: 28
-        val height = heightInput.toFloatOrNull() ?: 175f
-        val weight = weightInput.toFloatOrNull()
-        if (!accountName.isNullOrBlank()) {
-            onSignInWithGoogle(accountName, name, age, height, weight)
-        } else {
-            onCompleteOnboarding(name, age, height, weight)
-        }
-    }
 
     val hasRiskCondition = q1Heart || q2ChestPain || q3Dizziness || q4Joints
     val scrollState = rememberScrollState()
@@ -332,41 +318,49 @@ fun OnboardingScreen(
         // Sign In with Google Option
         OutlinedButton(
             onClick = {
-                try {
-                    val intent = android.accounts.AccountManager.newChooseAccountIntent(
-                        null,
-                        null,
-                        arrayOf("com.google"),
-                        null,
-                        null,
-                        null,
-                        null
-                    )
-                    googleAccountPicker.launch(intent)
-                } catch (e: Exception) {
-                    val name = nameInput.trim().ifBlank { "Athlete" }
-                    val age = ageInput.toIntOrNull() ?: 28
-                    val height = heightInput.toFloatOrNull() ?: 175f
-                    val weight = weightInput.toFloatOrNull()
-                    onCompleteOnboarding(name, age, height, weight)
-                }
+                val name = nameInput.trim().ifBlank { "Athlete" }
+                val age = ageInput.toIntOrNull() ?: 28
+                val height = heightInput.toFloatOrNull() ?: 175f
+                val weight = weightInput.toFloatOrNull()
+                onSignInWithGoogle(name, age, height, weight)
             },
-            enabled = disclaimerAccepted,
+            enabled = disclaimerAccepted && !isSigningIn,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            if (isSigningIn) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Signing in...",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.action_sign_in_google),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+        }
+
+        if (!errorMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = stringResource(R.string.action_sign_in_google),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
