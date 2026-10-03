@@ -84,7 +84,15 @@ fun JumphubApp(container: AppContainer) {
                         .fillMaxSize()
                         .windowInsetsPadding(WindowInsets.statusBars)
                 ) {
-                    val startDestination = if (preferences.onboardingCompleted) Screen.Home.route else Screen.Onboarding.route
+                    val startDestination = Screen.Home.route
+
+                    androidx.compose.runtime.LaunchedEffect(preferences.onboardingCompleted) {
+                        if (!preferences.onboardingCompleted) {
+                            navController.navigate(Screen.Onboarding.route) {
+                                popUpTo(Screen.Home.route) { inclusive = false }
+                            }
+                        }
+                    }
 
                     NavHost(
                         navController = navController,
@@ -93,9 +101,9 @@ fun JumphubApp(container: AppContainer) {
                     ) {
                         composable(Screen.Onboarding.route) {
                             OnboardingScreen(
-                                onCompleteOnboarding = { age, heightCm, weightKg ->
+                                onCompleteOnboarding = { name, age, heightCm, weightKg ->
                                     coroutineScope.launch {
-                                        container.preferences.setProfile(age, heightCm, weightKg)
+                                        container.preferences.setProfile(name, age, heightCm, weightKg)
                                         container.preferences.setOnboardingCompleted(true)
                                         container.preferences.setParqAcknowledged(true)
                                         container.authRepository.signInAsGuest()
@@ -104,12 +112,12 @@ fun JumphubApp(container: AppContainer) {
                                         }
                                     }
                                 },
-                                onSignInWithGoogle = { email, age, heightCm, weightKg ->
+                                onSignInWithGoogle = { email, name, age, heightCm, weightKg ->
                                     coroutineScope.launch {
-                                        container.preferences.setProfile(age, heightCm, weightKg)
+                                        container.preferences.setProfile(name, age, heightCm, weightKg)
                                         container.preferences.setOnboardingCompleted(true)
                                         container.preferences.setParqAcknowledged(true)
-                                        container.authRepository.signInWithGoogleAccount(email, email.substringBefore("@"))
+                                        container.authRepository.signInWithGoogleAccount(email, name.ifBlank { email.substringBefore("@") })
                                         navController.navigate(Screen.Home.route) {
                                             popUpTo(Screen.Onboarding.route) { inclusive = true }
                                         }
@@ -284,8 +292,8 @@ fun JumphubApp(container: AppContainer) {
                                 onSetSensitivity = { sens ->
                                     coroutineScope.launch { container.preferences.setSensitivity(sens) }
                                 },
-                                onSetProfile = { age, height, weight ->
-                                    coroutineScope.launch { container.preferences.setProfile(age, height, weight) }
+                                onSetProfile = { name, age, height, weight ->
+                                    coroutineScope.launch { container.preferences.setProfile(name, age, height, weight) }
                                 },
                                 onOpenAccount = { navController.navigate(Screen.Account.route) },
                                 onOpenWeight = { navController.navigate(Screen.Weight.route) },
@@ -431,12 +439,19 @@ fun JumphubApp(container: AppContainer) {
                         currentDestination = currentDestination,
                         isVisible = isFloatingNavVisible,
                         onNavigate = { destination ->
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (destination == NavDestination.HOME) {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Home.route) { inclusive = false }
+                                    launchSingleTop = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            } else {
+                                navController.navigate(destination.route) {
+                                    popUpTo(Screen.Home.route) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         },
                         modifier = Modifier.align(Alignment.BottomCenter)

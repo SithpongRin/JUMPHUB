@@ -145,7 +145,7 @@ private fun CrashReportContent(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "កម្មវិធីបានជួបប្រទះបញ្ហាបច្ចេកទេស។ អ្នកអាចចាប់ផ្តើមកម្មវិធីឡើងវិញបានភ្លាមៗ។",
+            text = "The application encountered an unexpected issue. You can restart the app immediately.",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.LightGray,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -165,7 +165,7 @@ private fun CrashReportContent(
             Icon(imageVector = Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Restart App / ចាប់ផ្តើមឡើងវិញ",
+                text = "Restart App",
                 color = Color.Black,
                 fontWeight = FontWeight.Bold
             )
@@ -203,7 +203,7 @@ private fun CrashReportContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Technical Details / ព័ត៌មានលម្អិត",
+                        text = "Technical Details",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )

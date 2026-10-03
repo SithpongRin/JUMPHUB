@@ -236,8 +236,12 @@ private fun CenterJumpCounter(workoutState: WorkoutState) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(vertical = 12.dp)
     ) {
+        val isMultiRound = workoutState.totalRounds > 1
+        val displayJumps = if (isMultiRound) workoutState.roundJumps else workoutState.totalJumps
+        val jumpLabel = if (isMultiRound) "ROUND ${workoutState.currentRound} JUMPS" else stringResource(R.string.unit_jumps).uppercase()
+
         Text(
-            text = "${workoutState.totalJumps}",
+            text = "$displayJumps",
             style = MaterialTheme.typography.displayLarge.copy(
                 fontSize = 104.sp,
                 lineHeight = 104.sp,
@@ -246,7 +250,7 @@ private fun CenterJumpCounter(workoutState: WorkoutState) {
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = stringResource(R.string.unit_jumps).uppercase(),
+            text = jumpLabel,
             style = MaterialTheme.typography.titleMedium.copy(
                 letterSpacing = 2.sp,
                 fontWeight = FontWeight.Bold
@@ -256,13 +260,13 @@ private fun CenterJumpCounter(workoutState: WorkoutState) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Jump Streak Pill
+        // Jump Streak & Total Jumps Pill
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -272,8 +276,13 @@ private fun CenterJumpCounter(workoutState: WorkoutState) {
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
+                val pillText = if (isMultiRound) {
+                    "Total: ${workoutState.totalJumps} · Streak: ${workoutState.currentStreak}"
+                } else {
+                    "Streak: ${workoutState.currentStreak} (Best: ${workoutState.bestStreak})"
+                }
                 Text(
-                    text = "Streak: ${workoutState.currentStreak} (Best: ${workoutState.bestStreak})",
+                    text = pillText,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )

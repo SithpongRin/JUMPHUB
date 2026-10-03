@@ -29,6 +29,7 @@ data class WorkoutState(
     val phase: WorkoutPhase = WorkoutPhase.IDLE,
     val countdownSeconds: Int = 3,
     val totalJumps: Int = 0,
+    val roundJumps: Int = 0,
     val detectedJumps: Int = 0,
     val correctedJumps: Int = 0,
     val activeSeconds: Int = 0,
@@ -228,6 +229,7 @@ class WorkoutStateMachine(
     private fun recordJumpEvent(event: JumpEvent) {
         val current = _workoutState.value
         val newTotal = current.totalJumps + 1
+        val newRoundJumps = current.roundJumps + 1
         val newDetected = current.detectedJumps + 1
         val newCorrected = current.correctedJumps + 1
 
@@ -245,6 +247,7 @@ class WorkoutStateMachine(
 
         _workoutState.value = current.copy(
             totalJumps = newTotal,
+            roundJumps = newRoundJumps,
             detectedJumps = newDetected,
             correctedJumps = newCorrected,
             currentStreak = newStreak,
@@ -317,7 +320,8 @@ class WorkoutStateMachine(
         _workoutState.value = _workoutState.value.copy(
             phase = WorkoutPhase.JUMPING,
             currentRound = nextRound,
-            roundActiveSeconds = 0
+            roundActiveSeconds = 0,
+            roundJumps = 0
         )
         audioCueEngine.postCue(
             AudioCueItem(AudioPriority.CRITICAL, textEn = "Round $nextRound of ${_workoutState.value.totalRounds}, start", textKm = "ជុំទី $nextRound ចាប់ផ្តើម")
@@ -363,11 +367,13 @@ class WorkoutStateMachine(
     fun adjustJumps(delta: Int) {
         val current = _workoutState.value
         val updatedTotal = (current.totalJumps + delta).coerceAtLeast(0)
+        val updatedRoundJumps = (current.roundJumps + delta).coerceAtLeast(0)
         val updatedCorrected = (current.correctedJumps + delta).coerceAtLeast(0)
         val jpm = WorkoutMetricsCalculator.calculateJpm(updatedTotal, current.activeSeconds)
 
         _workoutState.value = current.copy(
             totalJumps = updatedTotal,
+            roundJumps = updatedRoundJumps,
             correctedJumps = updatedCorrected,
             currentCadenceJpm = jpm
         )

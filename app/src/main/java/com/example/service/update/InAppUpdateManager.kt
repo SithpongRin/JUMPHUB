@@ -108,7 +108,7 @@ object InAppUpdateManager {
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = downloadManager.enqueue(request)
 
-            Toast.makeText(context, "កំពុងទាញយកកំណែថ្មី...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Downloading latest update...", Toast.LENGTH_SHORT).show()
 
             // Register broadcast receiver for download completion
             val onCompleteReceiver = object : BroadcastReceiver() {

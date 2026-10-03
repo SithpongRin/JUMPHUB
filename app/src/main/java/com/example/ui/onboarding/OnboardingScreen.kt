@@ -49,8 +49,8 @@ import com.example.R
 
 @Composable
 fun OnboardingScreen(
-    onCompleteOnboarding: (age: Int, heightCm: Float, weightKg: Float?) -> Unit,
-    onSignInWithGoogle: (email: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit = { _, a, h, w -> onCompleteOnboarding(a, h, w) },
+    onCompleteOnboarding: (name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit,
+    onSignInWithGoogle: (email: String, name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit = { _, n, a, h, w -> onCompleteOnboarding(n, a, h, w) },
     modifier: Modifier = Modifier
 ) {
     var q1Heart by remember { mutableStateOf(false) }
@@ -59,6 +59,7 @@ fun OnboardingScreen(
     var q4Joints by remember { mutableStateOf(false) }
     var disclaimerAccepted by remember { mutableStateOf(false) }
 
+    var nameInput by remember { mutableStateOf("Athlete") }
     var ageInput by remember { mutableStateOf("28") }
     var heightInput by remember { mutableStateOf("175") }
     var weightInput by remember { mutableStateOf("70") }
@@ -68,13 +69,14 @@ fun OnboardingScreen(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val accountName = result.data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
+        val name = nameInput.trim().ifBlank { "Athlete" }
         val age = ageInput.toIntOrNull() ?: 28
         val height = heightInput.toFloatOrNull() ?: 175f
         val weight = weightInput.toFloatOrNull()
         if (!accountName.isNullOrBlank()) {
-            onSignInWithGoogle(accountName, age, height, weight)
+            onSignInWithGoogle(accountName, name, age, height, weight)
         } else {
-            onCompleteOnboarding(age, height, weight)
+            onCompleteOnboarding(name, age, height, weight)
         }
     }
 
@@ -138,6 +140,16 @@ fun OnboardingScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    label = { Text("Athlete Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -284,7 +296,7 @@ fun OnboardingScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "កម្មវិធីនឹងស្នើសុំការអនុញ្ញាត Notification និង Sensor នៅក្នុង App ផ្ទាល់ ដើម្បីអាចរាប់ចំនួនលោត និងរំលឹកការហាត់តាមកាលវិភាគ។",
+                    text = "The app requests notification and sensor permissions directly within the app to detect jumps and schedule training reminders.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -295,10 +307,11 @@ fun OnboardingScreen(
 
         Button(
             onClick = {
+                val name = nameInput.trim().ifBlank { "Athlete" }
                 val age = ageInput.toIntOrNull() ?: 28
                 val height = heightInput.toFloatOrNull() ?: 175f
                 val weight = weightInput.toFloatOrNull()
-                onCompleteOnboarding(age, height, weight)
+                onCompleteOnboarding(name, age, height, weight)
             },
             enabled = disclaimerAccepted,
             modifier = Modifier
@@ -331,10 +344,11 @@ fun OnboardingScreen(
                     )
                     googleAccountPicker.launch(intent)
                 } catch (e: Exception) {
+                    val name = nameInput.trim().ifBlank { "Athlete" }
                     val age = ageInput.toIntOrNull() ?: 28
                     val height = heightInput.toFloatOrNull() ?: 175f
                     val weight = weightInput.toFloatOrNull()
-                    onCompleteOnboarding(age, height, weight)
+                    onCompleteOnboarding(name, age, height, weight)
                 }
             },
             enabled = disclaimerAccepted,

@@ -163,7 +163,13 @@
     <string name="account_signed_in_title">Cloud Account</string>
     <string name="account_signed_in_desc">Logged in as %1$s. Sync is active.</string>
 
+    <!-- Profile & Greeting -->
+    <string name="settings_section_profile">Athlete Profile</string>
+    <string name="settings_profile_name">Athlete Name</string>
+    <string name="onboarding_name_label">Your Name</string>
+    <string name="home_greeting">Hello, %1$s</string>
+
     <!-- Language options -->
     <string name="lang_en">English</string>
-    <string name="lang_km">ភាសាខ្មែរ (Khmer)</string>
+    <string name="lang_km">English (US)</string>
 </resources>

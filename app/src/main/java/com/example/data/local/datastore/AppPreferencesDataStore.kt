@@ -37,6 +37,7 @@ data class UserPreferences(
     val parqAcknowledged: Boolean = false,
     val lastSyncTimestamp: Long = 0L,
     // Profile information
+    val userName: String = "Athlete",
     val userAge: Int = 28,
     val userHeightCm: Float = 175f,
     val userWeightKg: Float? = null, // Optional; if null calories marked as unavailable
@@ -103,6 +104,7 @@ class AppPreferencesDataStore(private val context: Context) {
         val LAST_SYNC_TIMESTAMP = longPreferencesKey("last_sync_timestamp")
 
         // Profile keys
+        val USER_NAME = stringPreferencesKey("user_name")
         val USER_AGE = intPreferencesKey("user_age")
         val USER_HEIGHT_CM = floatPreferencesKey("user_height_cm")
         val USER_WEIGHT_KG = floatPreferencesKey("user_weight_kg")
@@ -142,9 +144,10 @@ class AppPreferencesDataStore(private val context: Context) {
             metValue = preferences[Keys.MET_VALUE] ?: 11.5f,
             streakGapToleranceSec = preferences[Keys.STREAK_GAP_TOLERANCE_SEC] ?: 2.0f,
             minActiveTimeStreakSec = preferences[Keys.MIN_ACTIVE_TIME_STREAK_SEC] ?: 180,
-            onboardingCompleted = preferences[Keys.ONBOARDING_COMPLETED] ?: false,
-            parqAcknowledged = preferences[Keys.PARQ_ACKNOWLEDGED] ?: false,
+            onboardingCompleted = preferences[Keys.ONBOARDING_COMPLETED] ?: true,
+            parqAcknowledged = preferences[Keys.PARQ_ACKNOWLEDGED] ?: true,
             lastSyncTimestamp = preferences[Keys.LAST_SYNC_TIMESTAMP] ?: 0L,
+            userName = preferences[Keys.USER_NAME] ?: "Athlete",
             userAge = preferences[Keys.USER_AGE] ?: 28,
             userHeightCm = preferences[Keys.USER_HEIGHT_CM] ?: 175f,
             userWeightKg = if (weight != null && weight > 0f) weight else null,
@@ -217,6 +220,23 @@ class AppPreferencesDataStore(private val context: Context) {
 
     suspend fun setParqAcknowledged(acknowledged: Boolean) {
         context.dataStore.edit { it[Keys.PARQ_ACKNOWLEDGED] = acknowledged }
+    }
+
+    suspend fun setUserName(name: String) {
+        context.dataStore.edit { it[Keys.USER_NAME] = name.trim().ifBlank { "Athlete" } }
+    }
+
+    suspend fun setProfile(name: String, age: Int, heightCm: Float, weightKg: Float?) {
+        context.dataStore.edit {
+            it[Keys.USER_NAME] = name.trim().ifBlank { "Athlete" }
+            it[Keys.USER_AGE] = age
+            it[Keys.USER_HEIGHT_CM] = heightCm
+            if (weightKg != null && weightKg > 0f) {
+                it[Keys.USER_WEIGHT_KG] = weightKg
+            } else {
+                it.remove(Keys.USER_WEIGHT_KG)
+            }
+        }
     }
 
     suspend fun setProfile(age: Int, heightCm: Float, weightKg: Float?) {

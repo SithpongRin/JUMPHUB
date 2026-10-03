@@ -73,7 +73,7 @@ fun SettingsScreen(
     onSetVoiceEnabled: (Boolean) -> Unit,
     onSetPhonePosition: (String) -> Unit,
     onSetSensitivity: (String) -> Unit,
-    onSetProfile: (age: Int, heightCm: Float, weightKg: Float?) -> Unit,
+    onSetProfile: (name: String, age: Int, heightCm: Float, weightKg: Float?) -> Unit,
     onOpenAccount: () -> Unit,
     onOpenWeight: () -> Unit,
     onCheckUpdates: () -> Unit,
@@ -91,6 +91,7 @@ fun SettingsScreen(
     var showUpdateDialog by remember { mutableStateOf(false) }
     var updateMessage by remember { mutableStateOf<String?>(null) }
 
+    var nameInput by remember(preferences.userName) { mutableStateOf(preferences.userName) }
     var ageInput by remember(preferences.userAge) { mutableStateOf("${preferences.userAge}") }
     var heightInput by remember(preferences.userHeightCm) { mutableStateOf("${preferences.userHeightCm.toInt()}") }
     var weightInput by remember(preferences.userWeightKg) { mutableStateOf(preferences.userWeightKg?.let { String.format("%.1f", it) } ?: "") }
@@ -154,11 +155,11 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Voice Language Toggle (Khmer / English)
+                // Voice Language Toggle
                 SettingsChoiceRow(
                     label = stringResource(R.string.settings_voice_language),
-                    currentValue = if (preferences.voiceLanguage == "km") stringResource(R.string.lang_km) else stringResource(R.string.lang_en),
-                    options = listOf("en" to "English", "km" to "ភាសាខ្មែរ"),
+                    currentValue = if (preferences.voiceLanguage == "km") "Khmer" else "English",
+                    options = listOf("en" to "English", "km" to "Khmer"),
                     onSelect = onSetVoiceLanguage
                 )
 
@@ -293,11 +294,24 @@ fun SettingsScreen(
         item {
             SettingsCard(title = "Athlete Profile & Calories", icon = Icons.Default.Person) {
                 Text(
-                    text = "Used to estimate calorie expenditure (MET x Weight x Active Hours). Weight is optional; if omitted, calories are marked unavailable.",
+                    text = "Used to personalize your experience and estimate calorie expenditure (MET x Weight x Active Hours). Weight is optional; if omitted, calories are marked unavailable.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = {
+                        nameInput = it
+                        profileSavedSuccess = false
+                    },
+                    label = { Text("Athlete Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -347,7 +361,7 @@ fun SettingsScreen(
                 ) {
                     if (profileSavedSuccess) {
                         Text(
-                            text = "Profile updated",
+                            text = "Profile updated successfully",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -357,10 +371,11 @@ fun SettingsScreen(
 
                     Button(
                         onClick = {
+                            val name = nameInput.trim().ifBlank { "Athlete" }
                             val age = ageInput.toIntOrNull() ?: 28
                             val height = heightInput.toFloatOrNull() ?: 175f
                             val weight = weightInput.toFloatOrNull()
-                            onSetProfile(age, height, weight)
+                            onSetProfile(name, age, height, weight)
                             profileSavedSuccess = true
                         },
                         shape = RoundedCornerShape(10.dp),
@@ -389,8 +404,8 @@ fun SettingsScreen(
                 // UI Language Toggle
                 SettingsChoiceRow(
                     label = stringResource(R.string.settings_ui_language),
-                    currentValue = if (preferences.uiLanguage == "km") stringResource(R.string.lang_km) else stringResource(R.string.lang_en),
-                    options = listOf("en" to "English", "km" to "ភាសាខ្មែរ"),
+                    currentValue = "English",
+                    options = listOf("en" to "English"),
                     onSelect = onSetUiLanguage
                 )
 

@@ -2,7 +2,6 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -74,21 +73,16 @@ fun DynamicFloatingNavigationBar(
             Surface(
                 modifier = Modifier
                     .widthIn(max = 440.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(32.dp),
-                        ambientColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                    )
                     .border(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(32.dp)
                     )
                     .testTag("floating_navigation_bar"),
                 shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                tonalElevation = 6.dp
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                shadowElevation = 8.dp,
+                tonalElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -118,11 +112,6 @@ private fun FloatingNavItem(
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val horizontalPadding by animateDpAsState(
-        targetValue = if (isSelected) 12.dp else 8.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "nav_item_padding"
-    )
 
     Box(
         modifier = Modifier
@@ -132,7 +121,7 @@ private fun FloatingNavItem(
                 indication = ripple(bounded = true, radius = 28.dp),
                 onClick = onClick
             )
-            .padding(vertical = 4.dp, horizontal = horizontalPadding)
+            .padding(vertical = 4.dp, horizontal = 10.dp)
             .testTag("nav_item_${destination.route}"),
         contentAlignment = Alignment.Center
     ) {

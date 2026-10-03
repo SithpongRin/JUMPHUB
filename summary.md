@@ -140,3 +140,25 @@ Unit and Robolectric tests in `app/src/test/java/com/example/`:
 - Assemble debug APK: `.\gradlew.bat :app:assembleDebug`
 - Bump version for update: modify `versionCode` & `versionName` in `app/build.gradle.kts`, rebuild APK, and draft new tag release on GitHub.
 
+---
+
+## 13. v1.0.5 Release Notes & Fixes
+- **Home Navigation Button Restored**:
+  - Root Cause: `NavHost` was previously using a dynamic `startDestination` expression that resolved to `Screen.Onboarding.route` during initial cold composition. Popping Onboarding left `findStartDestination()` pointing to a detached route node, breaking subsequent attempts to pop back to Home.
+  - Solution: Anchored `startDestination` permanently to `Screen.Home.route`, redirecting to Onboarding only when uncompleted via `LaunchedEffect`. Updated `DynamicFloatingNavigationBar` to navigate directly to `Screen.Home.route` with `popUpTo(Screen.Home.route) { inclusive = false }` and `launchSingleTop = true`.
+- **Round Jumps Resetting Per Round (`roundJumps`)**:
+  - Added dedicated `roundJumps` counter to `WorkoutState` and `WorkoutStateMachine`.
+  - When workouts transition across rounds (`enterNextRound()`), `roundJumps` resets to 0 so athletes see only their count for the current round, while lifetime workout jumps are preserved in the secondary display.
+  - Big counter in `WorkoutScreen` displays round count and current round label (`ROUND X JUMPS`), with total jumps and streak in the sub-pill.
+- **Pure 100% English UI Across All Locales**:
+  - Replaced `res/values-km/strings.xml` and internal hardcoded Khmer strings in `HomeScreen.kt`, `OnboardingScreen.kt`, `SettingsScreen.kt`, `InAppUpdateManager.kt`, and `CrashReportActivity.kt` with pure, clean English.
+  - Guarantees zero awkward Khmer/English bilingual mixing on devices running Khmer system locales.
+- **Athlete Name Personalization**:
+  - Added `userName` preference in `AppPreferencesDataStore`.
+  - Added Athlete Name input field in `OnboardingScreen` and `SettingsScreen` (under "Athlete Profile & Calories").
+  - Home screen now dynamically greets the athlete by name (`Hello, [Name]`).
+- **Smoothness & Performance Optimizations**:
+  - Eliminated heavy `animateDpAsState` height and width interpolations on navigation items in `DynamicFloatingNavigationBar`.
+  - Replaced manual Canvas blur/glow multi-pass rendering with hardware-accelerated `shadow(elevation = 8.dp)`.
+
+

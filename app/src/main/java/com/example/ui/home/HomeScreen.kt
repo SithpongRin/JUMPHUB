@@ -144,10 +144,10 @@ fun HomeScreen(
         val info = autoUpdateInfo!!
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showAutoUpdateDialog = false },
-            title = { androidx.compose.material3.Text("កំណែថ្មីមានស្រាប់: v${info.latestVersionName}") },
+            title = { androidx.compose.material3.Text("Update Available: v${info.latestVersionName}") },
             text = {
                 androidx.compose.foundation.layout.Column {
-                    androidx.compose.material3.Text("JUMPHUB មានកំណែថ្មីដែលល្អប្រសើរជាងមុន! ចុចអាប់ដេតឥឡូវដើម្បីទាញយក និងដំឡើងដោយស្វ័យប្រវត្តិ។")
+                    androidx.compose.material3.Text("A new version of JUMPHUB is available. Tap update to download and install now.")
                     if (info.releaseNotes.isNotBlank()) {
                         androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
                         androidx.compose.material3.Text(
@@ -195,9 +195,10 @@ private fun HeaderSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val athleteName = uiState.preferences.userName.ifBlank { "Athlete" }
         Column {
             Text(
-                text = stringResource(R.string.home_title),
+                text = "Hello, $athleteName",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.sp
@@ -299,7 +300,7 @@ private fun StartWorkoutHero(
 
             Text(
                 text = if (activePlan != null) "Week ${activePlan.currentWeek} · Day ${activePlan.currentDay} (WHO Guideline Standard)"
-                else "សូមជ្រើសរើស Training Plan ជាមុនសិន ដើម្បីហាត់តាមកម្រិតត្រឹមត្រូវតាម WHO!",
+                else "Select a training plan to start structured WHO guideline workouts!",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -327,7 +328,7 @@ private fun StartWorkoutHero(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = if (activePlan != null) stringResource(R.string.action_start) else "ជ្រើសរើស Plan ឥឡូវនេះ",
+                    text = if (activePlan != null) stringResource(R.string.action_start) else "Select Plan",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
